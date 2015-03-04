@@ -22,6 +22,10 @@ module('copyable', {
       foo: DS.belongsTo('foo'),
     });
 
+    app.Baz = DS.Model.extend( Copyable, {
+      foos: DS.hasMany('foo'),
+    });
+
     store = app.__container__.lookup('store:main');
   }
 });
@@ -44,7 +48,7 @@ test('it copies attributes', function(assert) {
   });
 });
 
-test('it shallow copies relations', function(assert) {
+test('it shallow copies belongsTo relations', function(assert) {
   assert.expect(1);
 
   Ember.run(function() {
@@ -61,7 +65,27 @@ test('it shallow copies relations', function(assert) {
     });
 
     bar.copy().then(function(copy) {
-      assert.equal(copy.get('id'), bar.get('id'));
+      assert.equal(copy.get('foo.id'), bar.get('foo.id'));
+    });
+  });
+});
+
+test('it shallow copies hasMany relations', function(assert) {
+  assert.expect(2);
+
+  Ember.run(function() {
+
+    var foo1 = store.createRecord('foo');
+    foo1.set('id', 1);
+    var foo2 = store.createRecord('foo');
+    foo2.set('id', 2);
+
+    var baz = store.createRecord('baz');
+    baz.get('foos').pushObjects([foo1,foo2]);
+
+    baz.copy().then(function(copy) {
+      assert.equal(copy.get('foos.firstObject.id'), baz.get('foos.firstObject.id'));
+      assert.equal(copy.get('foos.lastObject.id'), baz.get('foos.lastObject.id'));
     });
   });
 });

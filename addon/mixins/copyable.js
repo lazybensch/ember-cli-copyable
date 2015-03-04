@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import DS from 'ember-data';
 
 var Copyable = Ember.Mixin.create({
 
@@ -11,16 +12,35 @@ var Copyable = Ember.Mixin.create({
       var attributes = _this._attributes;
       var relationships = _this._relationships;
       var copy = _this.get('store').createRecord(type);
+      var queue = [];
 
-      for (var attribute in attributes) {
-        copy.set(attribute, _this.get(attribute));
+      for (var attr in attributes) {
+        copy.set(attr, _this.get(attr));
       }
 
-      for (var relationship in relationships) {
-        copy.set(relationship, _this.get(relationship));
+      for (var rel in relationships) {
+        if (_this.get(rel).constructor === DS.PromiseObject) {
+
+          //console.log('found promise');
+          if (relationships[rel].relationshipMeta.kind === 'belongsTo') {
+          } else {
+          }
+
+        } else {
+
+          //console.log('found instance');
+          if (relationships[rel].relationshipMeta.kind === 'belongsTo') {
+            copy.set(rel, _this.get(rel));
+          } else {
+            copy.get(rel).pushObjects(_this.get(rel));
+          }
+
+        }
       }
 
-      resolve(copy);
+      Ember.RSVP.all(queue).then(function() {
+        resolve(copy);
+      });
     });
   }
 
