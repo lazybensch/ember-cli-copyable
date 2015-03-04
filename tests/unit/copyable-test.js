@@ -1,5 +1,5 @@
 import Ember from 'ember';
-import Copyable from 'ember-cli-copy';
+import Copyable from 'ember-cli-copyable';
 import DS from 'ember-data';
 import { test } from 'ember-qunit';
 import { module } from 'qunit';

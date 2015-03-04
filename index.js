@@ -2,5 +2,5 @@
 'use strict';
 
 module.exports = {
-  name: 'ember-cli-copy'
+  name: 'ember-cli-copyable'
 };

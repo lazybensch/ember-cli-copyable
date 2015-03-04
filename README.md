@@ -1,4 +1,4 @@
-# Ember-cli-copy
+# Ember-cli-copyable
 
 This README outlines the details of collaborating on this Ember addon.
 
