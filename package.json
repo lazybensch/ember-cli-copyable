@@ -1,7 +1,7 @@
 {
   "name": "ember-cli-copy",
   "version": "0.0.0",
-  "description": "The default blueprint for ember-cli addons.",
+  "description": "Deeply copies your records including their relations. The mixin is smart enough to resolve not loaded relations and is configurable to what should be shallow/deeply copied or excluded entirely.",
   "directories": {
     "doc": "doc",
     "test": "tests"
@@ -11,11 +11,11 @@
     "build": "ember build",
     "test": "ember test"
   },
-  "repository": "",
+  "repository": "https://github.com/lazybensch/ember-cli-copy",
   "engines": {
     "node": ">= 0.10.0"
   },
-  "author": "",
+  "author": "LazyBensch",
   "license": "MIT",
   "devDependencies": {
     "broccoli-asset-rev": "^2.0.0",
@@ -35,7 +35,11 @@
     "glob": "^4.0.5"
   },
   "keywords": [
-    "ember-addon"
+    "ember-addon",
+    "ember-cli-copy",
+    "copy",
+    "copyable",
+    "mixin"
   ],
   "ember-addon": {
     "configPath": "tests/dummy/config"
