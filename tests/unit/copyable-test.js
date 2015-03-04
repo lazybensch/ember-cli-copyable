@@ -82,8 +82,16 @@ module('copyable - synchronous deep relations', {
       foos: DS.hasMany('foo')
     });
 
-    app.Multi = DS.Model.extend( Copyable, {
-      //bars: DS.hasMany('bar'),
+    app.MultiBaz = DS.Model.extend( Copyable, {
+      baz: DS.belongsTo('baz')
+    });
+
+    app.MultiBar = DS.Model.extend( Copyable, {
+      bars: DS.hasMany('bar'),
+    });
+
+    app.MultiBarBaz = DS.Model.extend( Copyable, {
+      bars: DS.hasMany('bar'),
       baz: DS.belongsTo('baz')
     });
 
@@ -166,6 +174,64 @@ test('it deep copies through multiple hierarchies', function(assert) {
     foo2.set('prop', 'prop2');
     foo2.set('id', 2);
 
+    var baz = store.createRecord('baz');
+    baz.get('foos').pushObjects([foo1,foo2]);
+    baz.set('id', 1);
+
+    var multi = store.createRecord('multiBaz');
+    multi.set('baz', baz);
+    multi.set('id', 1);
+
+    multi.copy().then(function(copy) {
+      assert.notEqual(copy.get('id'), multi.get('id'), 'a');
+
+      assert.notEqual(copy.get('baz.id'), multi.get('baz.id'), 'b');
+      assert.notEqual(copy.get('baz.foos.firstObject.id'), multi.get('baz.foos.firstObject.id'), 'd');
+      assert.equal(copy.get('baz.foos.firstObject.prop'), multi.get('baz.foos.firstObject.prop'), 'f');
+    });
+  });
+});
+
+test('it deep copies through multiple hierarchies', function(assert) {
+  assert.expect(4);
+
+  Ember.run(function() {
+
+    var foo1 = store.createRecord('foo');
+    foo1.set('prop', 'prop1');
+    foo1.set('id', 1);
+
+    var bar = store.createRecord('bar');
+    bar.set('foo', foo1);
+    bar.set('id', 1);
+
+    var multi = store.createRecord('multiBar');
+    multi.get('bars').pushObject(bar);
+    multi.set('id', 1);
+
+    multi.copy().then(function(copy) {
+      assert.notEqual(copy.get('id'), multi.get('id'), 'a');
+
+      assert.notEqual(copy.get('bars.firstObject.id'), multi.get('bars.firstObject.id'), 'c');
+      assert.notEqual(copy.get('bars.firstObject.foo.id'), multi.get('bars.firstObject.foo.id'), 'e');
+      assert.equal(copy.get('bars.firstObject.foo.prop'), multi.get('bars.firstObject.foo.prop'), 'g');
+    });
+  });
+});
+
+test('it deep copies through multiple hierarchies', function(assert) {
+  assert.expect(4);
+
+  Ember.run(function() {
+
+    var foo1 = store.createRecord('foo');
+    foo1.set('prop', 'prop1');
+    foo1.set('id', 1);
+
+    var foo2 = store.createRecord('foo');
+    foo2.set('prop', 'prop2');
+    foo2.set('id', 2);
+
     var foo3 = store.createRecord('foo');
     foo3.set('prop', 'prop3');
     foo3.set('id', 3);
@@ -179,21 +245,19 @@ test('it deep copies through multiple hierarchies', function(assert) {
     baz.set('id', 1);
 
     var multi = store.createRecord('multi');
-    multi.set('baz', baz);
-    //multi.get('bars').pushObject(bar);
+    multi.get('bars').pushObject(bar);
     multi.set('id', 1);
 
     multi.copy().then(function(copy) {
-      console.log('copy: ', copy);
       assert.notEqual(copy.get('id'), multi.get('id'), 'a');
 
       assert.notEqual(copy.get('baz.id'), multi.get('baz.id'), 'b');
       assert.notEqual(copy.get('baz.foos.firstObject.id'), multi.get('baz.foos.firstObject.id'), 'd');
       assert.equal(copy.get('baz.foos.firstObject.prop'), multi.get('baz.foos.firstObject.prop'), 'f');
 
-      //assert.notEqual(copy.get('bars.firstObject.id'), multi.get('bars.firstObject.id'), 'c');
-      //assert.notEqual(copy.get('bars.firstObject.foo.id'), multi.get('bars.firstObject.foo.id'), 'e');
-      //assert.equal(copy.get('bars.firstObject.foo.prop'), multi.get('bars.firstObject.foo.prop'), 'g');
+      assert.notEqual(copy.get('bars.firstObject.id'), multi.get('bars.firstObject.id'), 'c');
+      assert.notEqual(copy.get('bars.firstObject.foo.id'), multi.get('bars.firstObject.foo.id'), 'e');
+      assert.equal(copy.get('bars.firstObject.foo.prop'), multi.get('bars.firstObject.foo.prop'), 'g');
     });
   });
 });
