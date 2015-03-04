@@ -82,6 +82,11 @@ module('copyable - synchronous deep relations', {
       foos: DS.hasMany('foo')
     });
 
+    app.Multi = DS.Model.extend( Copyable, {
+      //bars: DS.hasMany('bar'),
+      baz: DS.belongsTo('baz')
+    });
+
     store = app.__container__.lookup('store:main');
   }
 });
@@ -144,6 +149,51 @@ test('it deep copies hasMany relations', function(assert) {
       assert.equal(copy.get('foos.firstObject.prop'), baz.get('foos.firstObject.prop'));
       assert.notEqual(copy.get('foos.lastObject.id'), baz.get('foos.lastObject.id'));
       assert.equal(copy.get('foos.lastObject.prop'), baz.get('foos.lastObject.prop'));
+    });
+  });
+});
+
+test('it deep copies through multiple hierarchies', function(assert) {
+  assert.expect(4);
+
+  Ember.run(function() {
+
+    var foo1 = store.createRecord('foo');
+    foo1.set('prop', 'prop1');
+    foo1.set('id', 1);
+
+    var foo2 = store.createRecord('foo');
+    foo2.set('prop', 'prop2');
+    foo2.set('id', 2);
+
+    var foo3 = store.createRecord('foo');
+    foo3.set('prop', 'prop3');
+    foo3.set('id', 3);
+
+    var bar = store.createRecord('bar');
+    bar.set('foo', foo1);
+    bar.set('id', 1);
+
+    var baz = store.createRecord('baz');
+    baz.get('foos').pushObjects([foo2,foo3]);
+    baz.set('id', 1);
+
+    var multi = store.createRecord('multi');
+    multi.set('baz', baz);
+    //multi.get('bars').pushObject(bar);
+    multi.set('id', 1);
+
+    multi.copy().then(function(copy) {
+      console.log('copy: ', copy);
+      assert.notEqual(copy.get('id'), multi.get('id'), 'a');
+
+      assert.notEqual(copy.get('baz.id'), multi.get('baz.id'), 'b');
+      assert.notEqual(copy.get('baz.foos.firstObject.id'), multi.get('baz.foos.firstObject.id'), 'd');
+      assert.equal(copy.get('baz.foos.firstObject.prop'), multi.get('baz.foos.firstObject.prop'), 'f');
+
+      //assert.notEqual(copy.get('bars.firstObject.id'), multi.get('bars.firstObject.id'), 'c');
+      //assert.notEqual(copy.get('bars.firstObject.foo.id'), multi.get('bars.firstObject.foo.id'), 'e');
+      //assert.equal(copy.get('bars.firstObject.foo.prop'), multi.get('bars.firstObject.foo.prop'), 'g');
     });
   });
 });

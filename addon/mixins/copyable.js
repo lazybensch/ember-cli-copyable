@@ -2,7 +2,6 @@ import Ember from 'ember';
 import DS from 'ember-data';
 
 var Copyable = Ember.Mixin.create({
-  /*jshint loopfunc: true */
 
   copyable: true,
   copy: function() {
@@ -14,12 +13,26 @@ var Copyable = Ember.Mixin.create({
       var attributes = _this._attributes;
       var relationships = _this._relationships;
       var copy = _this.get('store').createRecord(type);
+      var obj, objs, copies, rel, attr, pushToRelation, setToRelation, copyObj;
+      var queue = [];
 
-      for (var attr in attributes) {
+      pushToRelation = function(resolvedCopies) {
+        copy.get(rel).pushObjects(resolvedCopies);
+      };
+
+      setToRelation = function(objCopy) {
+        copy.set(rel, objCopy);
+      };
+
+      copyObj = function(obj) {
+        return obj.copy();
+      };
+
+      for (attr in attributes) {
         copy.set(attr, _this.get(attr));
       }
 
-      for (var rel in relationships) {
+      for (rel in relationships) {
         if (_this.get(rel).constructor === DS.PromiseObject) {
 
           if (relationships[rel].relationshipMeta.kind === 'belongsTo') {
@@ -29,28 +42,21 @@ var Copyable = Ember.Mixin.create({
         } else {
 
           if (relationships[rel].relationshipMeta.kind === 'belongsTo') {
-            var obj = _this.get(rel);
-            if (obj.get('copyable')) {
+            obj = _this.get(rel);
 
-              obj.copy().then(function(objCopy) {
-                copy.set(rel, objCopy);
-              });
+            if (obj.get('copyable')) {
+              queue.pushObject( obj.copy().then(setToRelation) );
             } else {
               copy.set(rel, obj);
             }
 
           } else {
-            var objs = _this.get(rel);
+            objs = _this.get(rel);
 
             if (objs.get('firstObject.copyable')) {
 
-              var copies = objs.map(function(obj) {
-                return obj.copy();
-              });
-
-              Ember.RSVP.all(copies).then(function(resolvedCopies) {
-                copy.get(rel).pushObjects(resolvedCopies);
-              });
+              copies = objs.map(copyObj);
+              queue.pushObject( Ember.RSVP.all(copies).then(pushToRelation) );
 
             } else {
               copy.get(rel).pushObjects(objs);
@@ -60,7 +66,9 @@ var Copyable = Ember.Mixin.create({
         }
       }
 
-      resolve(copy);
+      Ember.RSVP.all(queue).then(function() {
+        resolve(copy);
+      });
     });
   }
 });
