@@ -22,6 +22,10 @@ module('copyable - synchronous relations', {
       foo: DS.belongsTo('foo'),
     });
 
+    app.Baz = DS.Model.extend( Copyable, {
+      foos: DS.hasMany('foo'),
+    });
+
     app.Fee = DS.Model.extend( Copyable, {
       prop1: DS.attr('string'),
       prop2: DS.attr('string')
@@ -31,8 +35,8 @@ module('copyable - synchronous relations', {
       fee: DS.belongsTo('fee'),
     });
 
-    app.Baz = DS.Model.extend( Copyable, {
-      foos: DS.hasMany('foo'),
+    app.Bez = DS.Model.extend( Copyable, {
+      fees: DS.hasMany('fee'),
     });
 
     store = app.__container__.lookup('store:main');
@@ -115,3 +119,27 @@ test('it deep copies belongsTo relations', function(assert) {
   });
 });
 
+
+test('it deep copies hasMany relations', function(assert) {
+  assert.expect(4);
+
+  Ember.run(function() {
+
+    var fee1 = store.createRecord('fee');
+    var fee2 = store.createRecord('fee');
+    var bez = store.createRecord('bez');
+
+    fee1.set('id', 1);
+    fee2.set('id', 2);
+    fee1.set('prop1', 'propA');
+    fee2.set('prop1', 'propB');
+    bez.get('fees').pushObjects([fee1,fee2]);
+
+    bez.copy().then(function(copy) {
+      assert.notEqual(copy.get('fees.firstObject.id'), bez.get('fees.firstObject.id'));
+      assert.equal(copy.get('fees.firstObject.prop1'), bez.get('fees.firstObject.prop1'));
+      assert.notEqual(copy.get('fees.lastObject.id'), bez.get('fees.lastObject.id'));
+      assert.equal(copy.get('fees.lastObject.prop1'), bez.get('fees.lastObject.prop1'));
+    });
+  });
+});

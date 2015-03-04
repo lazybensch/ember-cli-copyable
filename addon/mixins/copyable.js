@@ -2,6 +2,7 @@ import Ember from 'ember';
 import DS from 'ember-data';
 
 var Copyable = Ember.Mixin.create({
+  /*jshint loopfunc: true */
 
   copyable: true,
   copy: function() {
@@ -29,18 +30,31 @@ var Copyable = Ember.Mixin.create({
 
           if (relationships[rel].relationshipMeta.kind === 'belongsTo') {
             var obj = _this.get(rel);
-
             if (obj.get('copyable')) {
 
               obj.copy().then(function(objCopy) {
                 copy.set(rel, objCopy);
               });
-
             } else {
               copy.set(rel, obj);
             }
+
           } else {
-            copy.get(rel).pushObjects(_this.get(rel));
+            var objs = _this.get(rel);
+
+            if (objs.get('firstObject.copyable')) {
+
+              var copies = objs.map(function(obj) {
+                return obj.copy();
+              });
+
+              Ember.RSVP.all(copies).then(function(resolvedCopies) {
+                copy.get(rel).pushObjects(resolvedCopies);
+              });
+
+            } else {
+              copy.get(rel).pushObjects(objs);
+            }
           }
 
         }
