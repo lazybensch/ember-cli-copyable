@@ -39,6 +39,8 @@
     "ember-cli-copyable",
     "copy",
     "copyable",
+    "clone",
+    "cloneable",
     "mixin"
   ],
   "ember-addon": {
