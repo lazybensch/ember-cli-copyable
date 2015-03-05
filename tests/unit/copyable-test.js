@@ -87,7 +87,7 @@ test('it shallow copies belongsTo relations', function(assert) {
 
     bar.copy().then(function(copy) {
 
-      assert.equal(copy.get('foo.id'), bar.get('foo.id'));
+      assert.equal(copy.get('foo.id'), bar.get('foo.id'), 'relation on copy and original is the same object');
 
     });
 
@@ -100,8 +100,8 @@ test('it shallow copies hasMany relations', function(assert) {
 
     baz.copy().then(function(copy) {
 
-      assert.equal(copy.get('foos.firstObject.id'), baz.get('foos.firstObject.id'));
-      assert.equal(copy.get('foos.lastObject.id'), baz.get('foos.lastObject.id'));
+      assert.equal(copy.get('foos.firstObject.id'), baz.get('foos.firstObject.id'), 'first object in hasMany relation on copy and original is the same object');
+      assert.equal(copy.get('foos.lastObject.id'), baz.get('foos.lastObject.id'), 'last object in hasMany relation on copy and original is the same object');
 
     });
 
@@ -126,8 +126,8 @@ test('it copies attributes', function(assert) {
 
     foo1.copy().then(function(copy) {
 
-      assert.notEqual(copy.get('id'), foo1.get('id'));
-      assert.equal(copy.get('prop'), foo1.get('prop'));
+      assert.notEqual(copy.get('id'), foo1.get('id'), 'the copy and original are not the same object');
+      assert.equal(copy.get('prop'), foo1.get('prop'), 'the attribute properties are the same');
 
     });
 
@@ -140,8 +140,8 @@ test('it deep copies belongsTo relations', function(assert) {
 
     bar.copy().then(function(copy) {
 
-      assert.notEqual(copy.get('foo.id'), bar.get('foo.id'));
-      assert.equal(copy.get('foo.prop'), bar.get('foo.prop'));
+      assert.notEqual(copy.get('foo.id'), bar.get('foo.id'), 'the relation of copy and original are not the same object');
+      assert.equal(copy.get('foo.prop'), bar.get('foo.prop'), 'the relation atrtibute of copy and original are the same');
 
     });
 
@@ -154,10 +154,10 @@ test('it deep copies hasMany relations', function(assert) {
 
     baz.copy().then(function(copy) {
 
-      assert.notEqual(copy.get('foos.firstObject.id'), baz.get('foos.firstObject.id'));
-      assert.equal(copy.get('foos.firstObject.prop'), baz.get('foos.firstObject.prop'));
-      assert.notEqual(copy.get('foos.lastObject.id'), baz.get('foos.lastObject.id'));
-      assert.equal(copy.get('foos.lastObject.prop'), baz.get('foos.lastObject.prop'));
+      assert.notEqual(copy.get('foos.firstObject.id'), baz.get('foos.firstObject.id'), 'the first object in the hasMany relation of copy and original are not the same object');
+      assert.equal(copy.get('foos.firstObject.prop'), baz.get('foos.firstObject.prop'), 'the first objects attribute in the hasMany relation of copy and original are the same');
+      assert.notEqual(copy.get('foos.lastObject.id'), baz.get('foos.lastObject.id'), 'the last object in the hasMany relation of copy and original are not the same object');
+      assert.equal(copy.get('foos.lastObject.prop'), baz.get('foos.lastObject.prop'), 'the first objects attribute in the hasMany relation of copy and original are the same');
 
     });
 
@@ -174,10 +174,10 @@ test('it deep copies through multiple belongsTo/hasMany relations', function(ass
 
     multi.copy().then(function(copy) {
 
-      assert.notEqual(copy.get('id'), multi.get('id'), 'a');
-      assert.notEqual(copy.get('baz.id'), multi.get('baz.id'), 'b');
-      assert.notEqual(copy.get('baz.foos.firstObject.id'), multi.get('baz.foos.firstObject.id'), 'd');
-      assert.equal(copy.get('baz.foos.firstObject.prop'), multi.get('baz.foos.firstObject.prop'), 'f');
+      assert.notEqual(copy.get('id'), multi.get('id'), 'the copy and the original are not the same objects');
+      assert.notEqual(copy.get('baz.id'), multi.get('baz.id'), 'the copys and originals belongsTo relation are not the same objects');
+      assert.notEqual(copy.get('baz.foos.firstObject.id'), multi.get('baz.foos.firstObject.id'), 'the copys and originals hasMany relations are not the same objects');
+      assert.equal(copy.get('baz.foos.firstObject.prop'), multi.get('baz.foos.firstObject.prop'), 'the attributes of deeply copied objects are the same');
 
     });
 
@@ -194,10 +194,10 @@ test('it deep copies through multiple hasMany/belongsTo relations', function(ass
 
     multi.copy().then(function(copy) {
 
-      assert.notEqual(copy.get('id'), multi.get('id'), 'a');
-      assert.notEqual(copy.get('bars.firstObject.id'), multi.get('bars.firstObject.id'), 'c');
-      assert.notEqual(copy.get('bars.firstObject.foo.id'), multi.get('bars.firstObject.foo.id'), 'e');
-      assert.equal(copy.get('bars.firstObject.foo.prop'), multi.get('bars.firstObject.foo.prop'), 'g');
+      assert.notEqual(copy.get('id'), multi.get('id'), 'the copy and the original are not the same objects');
+      assert.notEqual(copy.get('bars.firstObject.id'), multi.get('bars.firstObject.id'), 'the hasMany relations of copy and original are not the same objects');
+      assert.notEqual(copy.get('bars.firstObject.foo.id'), multi.get('bars.firstObject.foo.id'), 'the nested relations in hasMany relations of copy and original are not the same objects');
+      assert.equal(copy.get('bars.firstObject.foo.prop'), multi.get('bars.firstObject.foo.prop'), 'the nested relations in hasMany relations of copy and original have the same attributes');
 
     });
 
@@ -215,15 +215,15 @@ test('it deep copies through every relation combination', function(assert) {
 
     multi.copy().then(function(copy) {
 
-      assert.notEqual(copy.get('id'), multi.get('id'), 'a');
+      assert.notEqual(copy.get('id'), multi.get('id'), 'the copy and the original are not the same objects');
 
-      assert.notEqual(copy.get('baz.id'), multi.get('baz.id'), 'b');
-      assert.notEqual(copy.get('baz.foos.firstObject.id'), multi.get('baz.foos.firstObject.id'), 'd');
-      assert.equal(copy.get('baz.foos.firstObject.prop'), multi.get('baz.foos.firstObject.prop'), 'f');
+      assert.notEqual(copy.get('baz.id'), multi.get('baz.id'), 'the copys and originals belongsTo relation are not the same objects');
+      assert.notEqual(copy.get('baz.foos.firstObject.id'), multi.get('baz.foos.firstObject.id'), 'the copys and originals hasMany relations are not the same objects');
+      assert.equal(copy.get('baz.foos.firstObject.prop'), multi.get('baz.foos.firstObject.prop'), 'the attributes of deeply copied objects are the same');
 
-      assert.notEqual(copy.get('bars.firstObject.id'), multi.get('bars.firstObject.id'), 'c');
-      assert.notEqual(copy.get('bars.firstObject.foo.id'), multi.get('bars.firstObject.foo.id'), 'e');
-      assert.equal(copy.get('bars.firstObject.foo.prop'), multi.get('bars.firstObject.foo.prop'), 'g');
+      assert.notEqual(copy.get('bars.firstObject.id'), multi.get('bars.firstObject.id'), 'the hasMany relations of copy and original are not the same objects');
+      assert.notEqual(copy.get('bars.firstObject.foo.id'), multi.get('bars.firstObject.foo.id'), 'the nested relations in hasMany relations of copy and original are not the same objects');
+      assert.equal(copy.get('bars.firstObject.foo.prop'), multi.get('bars.firstObject.foo.prop'), 'the nested relations in hasMany relations of copy and original have the same attributes');
 
     });
 
@@ -239,9 +239,9 @@ test('it works with empty relations', function(assert) {
 
     multi.copy().then(function(copy) {
 
-      assert.notEqual(copy.get('id'), multi.get('id'), 'a');
-      assert.equal(copy.get('baz'), null, 'b');
-      assert.equal(copy.get('bars.length'), 0, 'c');
+      assert.notEqual(copy.get('id'), multi.get('id'), 'the copy and the original are not the same objects');
+      assert.equal(copy.get('baz'), null, 'the copy should aswell have no belongsTo relation set');
+      assert.equal(copy.get('bars.length'), 0, 'the copy should aswell have no hasMany relation set');
 
     });
 
