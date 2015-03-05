@@ -30,9 +30,37 @@ var Copyable = Ember.Mixin.create({
 
           if (_this.get(rel).constructor === DS.PromiseObject) {
 
-            if (relationships[rel].relationshipMeta.kind === 'belongsTo') {
-            } else {
-            }
+            queue.pushObject(_this.get(rel).then(function(obj) {
+
+              if (obj.get('copyable')) {
+                return obj.copy().then(function(objCopy) {
+                  copy.set(rel, objCopy);
+                });
+
+              } else {
+                copy.set(rel, obj);
+              }
+
+            }));
+
+
+          } else if (_this.get(rel).constructor === DS.PromiseManyArray) {
+
+            queue.pushObject(_this.get(rel).then(function(array) {
+
+              array.forEach(function(obj) {
+                if (obj.get('copyable')) {
+                  return obj.copy().then(function(objCopy) {
+                    copy.get(rel).pushObject(objCopy);
+                  });
+
+                } else {
+                  copy.get(rel).pushObject(obj);
+                }
+              });
+
+
+            }));
 
           } else {
 
