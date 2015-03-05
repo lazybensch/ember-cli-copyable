@@ -91,8 +91,8 @@ module('copyable - synchronous deep relations', {
     });
 
     app.MultiBarBaz = DS.Model.extend( Copyable, {
-      bars: DS.hasMany('bar'),
-      baz: DS.belongsTo('baz')
+      baz: DS.belongsTo('baz'),
+      bars: DS.hasMany('bar')
     });
 
     store = app.__container__.lookup('store:main');
@@ -220,7 +220,7 @@ test('it deep copies through multiple hierarchies', function(assert) {
 });
 
 test('it deep copies through multiple hierarchies', function(assert) {
-  assert.expect(4);
+  assert.expect(7);
 
   Ember.run(function() {
 
@@ -244,8 +244,9 @@ test('it deep copies through multiple hierarchies', function(assert) {
     baz.get('foos').pushObjects([foo2,foo3]);
     baz.set('id', 1);
 
-    var multi = store.createRecord('multi');
+    var multi = store.createRecord('multiBarBaz');
     multi.get('bars').pushObject(bar);
+    multi.set('baz', baz);
     multi.set('id', 1);
 
     multi.copy().then(function(copy) {
