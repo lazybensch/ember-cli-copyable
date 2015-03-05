@@ -10,13 +10,13 @@ var Copyable = Ember.Mixin.create({
     return new Ember.RSVP.Promise(function(resolve) {
 
       var type = _this.constructor.typeKey;
-      var attributes = _this._attributes;
+      var attributes = Ember.get(_this.constructor, 'attributes').keys.list;
       var relationships = _this._relationships;
       var copy = _this.get('store').createRecord(type);
       var queue = [];
 
-      if (Ember.keys(attributes).length) {
-        Ember.keys(attributes).forEach(function (attr) {
+      if (attributes.length) {
+        attributes.forEach(function (attr) {
           copy.set(attr, _this.get(attr));
         });
       }
