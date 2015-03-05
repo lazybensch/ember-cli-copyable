@@ -161,7 +161,7 @@ test('it deep copies hasMany relations', function(assert) {
   });
 });
 
-test('it deep copies through multiple hierarchies', function(assert) {
+test('it deep copies through multiple belongsTo/hasMany relations', function(assert) {
   assert.expect(4);
 
   Ember.run(function() {
@@ -192,7 +192,7 @@ test('it deep copies through multiple hierarchies', function(assert) {
   });
 });
 
-test('it deep copies through multiple hierarchies', function(assert) {
+test('it deep copies through multiple hasMany/belongsTo relations', function(assert) {
   assert.expect(4);
 
   Ember.run(function() {
@@ -219,7 +219,7 @@ test('it deep copies through multiple hierarchies', function(assert) {
   });
 });
 
-test('it deep copies through multiple hierarchies', function(assert) {
+test('it deep copies through every relation combination', function(assert) {
   assert.expect(7);
 
   Ember.run(function() {
@@ -259,6 +259,22 @@ test('it deep copies through multiple hierarchies', function(assert) {
       assert.notEqual(copy.get('bars.firstObject.id'), multi.get('bars.firstObject.id'), 'c');
       assert.notEqual(copy.get('bars.firstObject.foo.id'), multi.get('bars.firstObject.foo.id'), 'e');
       assert.equal(copy.get('bars.firstObject.foo.prop'), multi.get('bars.firstObject.foo.prop'), 'g');
+    });
+  });
+});
+
+test('it works with empty relations', function(assert) {
+  assert.expect(3);
+
+  Ember.run(function() {
+
+    var multi = store.createRecord('multiBarBaz');
+    multi.set('id', 1);
+
+    multi.copy().then(function(copy) {
+      assert.notEqual(copy.get('id'), multi.get('id'), 'a');
+      assert.equal(copy.get('baz'), null, 'b');
+      assert.equal(copy.get('bars.length'), 0, 'c');
     });
   });
 });

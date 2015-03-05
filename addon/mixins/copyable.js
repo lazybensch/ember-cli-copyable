@@ -23,6 +23,11 @@ var Copyable = Ember.Mixin.create({
 
       if (Ember.keys(relationships).length) {
         Ember.keys(relationships).forEach(function (rel) {
+
+          if (Ember.none(_this.get(rel))) {
+            return;
+          }
+
           if (_this.get(rel).constructor === DS.PromiseObject) {
 
             if (relationships[rel].relationshipMeta.kind === 'belongsTo') {
