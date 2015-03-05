@@ -13,11 +13,12 @@ var Copyable = Ember.Mixin.create({
       var attributes = _this._attributes;
       var relationships = _this._relationships;
       var copy = _this.get('store').createRecord(type);
-      var obj, objs, copies, attr;
       var queue = [];
 
-      for (attr in attributes) {
-        copy.set(attr, _this.get(attr));
+      if (Ember.keys(attributes).length) {
+        Ember.keys(attributes).forEach(function (attr) {
+          copy.set(attr, _this.get(attr));
+        });
       }
 
       if (Ember.keys(relationships).length) {
@@ -31,7 +32,7 @@ var Copyable = Ember.Mixin.create({
           } else {
 
             if (relationships[rel].relationshipMeta.kind === 'belongsTo') {
-              obj = _this.get(rel);
+              var obj = _this.get(rel);
 
               if (obj.get('copyable')) {
                 queue.pushObject( obj.copy().then(function(objCopy) {
@@ -43,11 +44,11 @@ var Copyable = Ember.Mixin.create({
               }
 
             } else {
-              objs = _this.get(rel);
+              var objs = _this.get(rel);
 
               if (objs.get('firstObject.copyable')) {
 
-                copies = objs.map(function(obj) {
+                var copies = objs.map(function(obj) {
                   return obj.copy();
                 });
 
