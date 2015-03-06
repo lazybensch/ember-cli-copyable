@@ -6,8 +6,6 @@ This addon provides you with a mixin, that can deeply copy your ember data model
 
 ```javascript
 copy = record.copy(options);
-
-copy.then(callback);
 ```
 
 ## shallow and deep copying
@@ -16,7 +14,7 @@ If the record you want to copy has a child, by default `ember-cli-copyable` will
 
 ## sync and async relations
 
-`ember-cli-copyable` does not care if the data that needs to be copied is already embedded, or still has to be fetched from your backend *(or both!)*. It will simply resolve and then copy any async child and generates a fully resolved copy for you.
+`ember-cli-copyable` does not mind if the data that needs to be copied is already embedded, or still has to be fetched from your backend *(or both!)*. It will simply resolve and then copy any async child and generates a fully resolved copy for you.
 
 ## simple example
 
@@ -92,17 +90,15 @@ You could now copy an event, assigning the same group of participants but overwr
 
 ```javascript
 today = moment().format();
-
 event.copy({date: today})
 ```
 
 ### nested options example
 
-Lets look at another example of customizing your copy.
+Lets look at another example that passes additional copy instructions down to the relations nested under your record.
 
 ```javascript
 import Copyable from 'ember-cli-copyable';
-
 
 Foo = DS.Model.extend( Copyable, {
   property: DS.attr('string')
