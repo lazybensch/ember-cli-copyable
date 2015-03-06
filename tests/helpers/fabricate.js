@@ -11,7 +11,8 @@ var setupModels = function(app, async) {
   });
 
   app.Baz = DS.Model.extend( Copyable, {
-    foos: DS.hasMany('foo', {async: async })
+    foos: DS.hasMany('foo', {async: async }),
+    bar: DS.belongsTo('bar', {async: async })
   });
 
   app.Multi = DS.Model.extend( Copyable, {
@@ -59,11 +60,13 @@ var setupFixtures = function(app) {
     FIXTURES: [
       {
         'id': '1',
-        'foos': ['1', '2']
+        'foos': ['1', '2'],
+        'bar': '1'
       },
       {
         'id': '2',
-        'foos': ['3']
+        'foos': ['3'],
+        'bar': '1'
       }
     ]
   });

@@ -102,6 +102,20 @@ test('it overwrites relations', function(assert) {
   });
 });
 
+test('it passes options to relations', function(assert) {
+  assert.expect(2);
+
+  return Ember.run(function() {
+    return store.find('multi', '1').then( function(multi) {
+
+      return multi.copy({baz: {bar: {foo: {property: 'asdf'}}}}).then(function (copy) {
+        assert.equal(copy.get('bars.firstObject.foo.property'), 'prop1');
+        assert.equal(copy.get('baz.bar.foo.property'), 'asdf');
+      });
+    });
+  });
+});
+
 test('it copies empty objects', function(assert) {
   assert.expect(3);
 
