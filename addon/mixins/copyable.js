@@ -4,7 +4,8 @@ import DS from 'ember-data';
 var Copyable = Ember.Mixin.create({
 
   copyable: true,
-  copy: function() {
+  copy: function(options) {
+    options = options || {};
 
     var _this = this;
     return new Ember.RSVP.Promise(function(resolve) {
@@ -14,12 +15,21 @@ var Copyable = Ember.Mixin.create({
       var queue = [];
 
       model.eachAttribute(function(attr) {
-        copy.set(attr, _this.get(attr));
+        switch(Ember.typeOf(options[attr])) {
+          case 'undefined':
+              copy.set(attr, _this.get(attr));
+              break;
+          case 'null':
+              copy.set(attr, null);
+              break;
+          default:
+              copy.set(attr, options[attr]);
+        }
       });
 
       model.eachRelationship(function(rel, meta) {
         if (Ember.none(_this.get(rel))) {
-          return; //is this necessary?
+          return;
         }
 
         if (_this.get(rel).constructor === DS.PromiseObject) {

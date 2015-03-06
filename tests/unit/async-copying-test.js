@@ -12,6 +12,18 @@ module('async copying', {
   }
 });
 
+test('it overwrites attributes', function(assert) {
+  assert.expect(1);
+
+  return Ember.run(function() {
+    return store.find('foo', '1').then( function(foo) {
+      return foo.copy({property: 'custom'}).then(function (copy) {
+        assert.equal(copy.get('property'), 'custom');
+      });
+    });
+  });
+});
+
 test('it shallow copies relation', function(assert) {
   assert.expect(1);
 
@@ -97,6 +109,17 @@ module('sync copying', {
       return store.find(type);
     }));
   }
+});
+
+test('it excludes attributes', function(assert) {
+  assert.expect(1);
+
+  var foo = store.getById('foo', '1');
+  return Ember.run(function() {
+    return foo.copy({property: null}).then(function (copy) {
+      assert.equal(copy.get('property'), null);
+    });
+  });
 });
 
 test('it shallow copies relation', function(assert) {
