@@ -1,6 +1,6 @@
 {
   "name": "ember-cli-copyable",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Deeply copies your records including their relations. The mixin is smart enough to resolve not loaded relations and is configurable to what should be shallow/deeply copied or excluded entirely.",
   "directories": {
     "doc": "doc",
