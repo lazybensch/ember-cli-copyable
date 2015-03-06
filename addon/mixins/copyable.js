@@ -29,7 +29,18 @@ var Copyable = Ember.Mixin.create({
 
       model.eachRelationship(function(rel, meta) {
         if (Ember.none(_this.get(rel))) {
+          console.log('ACHTUNG');
           return;
+        }
+
+        var overwrite;
+        switch(Ember.typeOf(options[rel])) {
+          case 'null':
+              return;
+          case 'instance':
+              overwrite = options[rel];
+              break;
+          default:
         }
 
         if (_this.get(rel).constructor === DS.PromiseObject) {
@@ -38,11 +49,11 @@ var Copyable = Ember.Mixin.create({
 
             if (obj.get('copyable')) {
               return obj.copy().then(function(objCopy) {
-                copy.set(rel, objCopy);
+                copy.set(rel, overwrite || objCopy);
               });
 
             } else {
-              copy.set(rel, obj);
+              copy.set(rel, overwrite || obj);
             }
 
           }));
@@ -73,11 +84,11 @@ var Copyable = Ember.Mixin.create({
 
             if (obj.get('copyable')) {
               queue.pushObject( obj.copy().then(function(objCopy) {
-                copy.set(rel, objCopy);
+                copy.set(rel, overwrite || objCopy);
               }));
 
             } else {
-              copy.set(rel, obj);
+              copy.set(rel, overwrite || obj);
             }
 
           } else {

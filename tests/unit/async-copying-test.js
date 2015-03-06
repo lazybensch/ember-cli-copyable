@@ -86,6 +86,22 @@ test('it copies complex objects', function(assert) {
   });
 });
 
+test('it overwrites relations', function(assert) {
+  assert.expect(2);
+
+  return Ember.run(function() {
+    return store.find('baz', '2').then( function(myBaz) {
+      return store.find('multi', '1').then( function(multi) {
+
+        return multi.copy({baz: myBaz}).then(function (copy) {
+          assert.equal(copy.get('bars.firstObject.foo.property'), 'prop1');
+          assert.equal(copy.get('baz.foos.length'), 1);
+        });
+      });
+    });
+  });
+});
+
 test('it copies empty objects', function(assert) {
   assert.expect(3);
 
@@ -172,6 +188,31 @@ test('it copies complex objects', function(assert) {
       assert.notEqual(copy.get('baz.id'), '1');
       assert.notEqual(copy.get('baz.foos.lastObject.id'), '2');
       assert.equal(copy.get('baz.foos.lastObject.property'), 'prop2');
+    });
+  });
+});
+
+test('it overwrites relations', function(assert) {
+  assert.expect(2);
+
+  var multi = store.getById('multi', '1');
+  var myBaz = store.getById('baz', '2');
+  return Ember.run(function() {
+    return multi.copy({baz: myBaz}).then(function (copy) {
+      assert.equal(copy.get('bars.firstObject.foo.property'), 'prop1');
+      assert.equal(copy.get('baz.foos.length'), myBaz.get('foos.length'));
+    });
+  });
+});
+
+test('it excludes relations', function(assert) {
+  assert.expect(2);
+
+  var multi = store.getById('multi', '1');
+  return Ember.run(function() {
+    return multi.copy({baz: null}).then(function (copy) {
+      assert.equal(copy.get('bars.firstObject.foo.property'), 'prop1');
+      assert.equal(copy.get('baz'), null);
     });
   });
 });

@@ -60,6 +60,10 @@ var setupFixtures = function(app) {
       {
         'id': '1',
         'foos': ['1', '2']
+      },
+      {
+        'id': '2',
+        'foos': ['3']
       }
     ]
   });
