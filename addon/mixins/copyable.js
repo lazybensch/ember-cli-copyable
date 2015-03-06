@@ -2,7 +2,6 @@ import Ember from 'ember';
 import DS from 'ember-data';
 
 var Copyable = Ember.Mixin.create({
-
   copyable: true,
   copy: function(options) {
     options = options || {};
@@ -96,6 +95,10 @@ var Copyable = Ember.Mixin.create({
 
           } else {
             var objs = _this.get(rel);
+
+            if (objs.get('content')) {
+              objs = objs.get('content').compact();
+            }
 
             if (objs.get('firstObject.copyable')) {
 
