@@ -74,6 +74,21 @@ test('it copies complex objects', function(assert) {
   });
 });
 
+test('it copies empty objects', function(assert) {
+  assert.expect(3);
+
+  return Ember.run(function() {
+    return store.find('multi', '2').then( function(multi) {
+
+      return multi.copy().then(function (copy) {
+        assert.notEqual(copy.get('id'), '2');
+        assert.equal(copy.get('bars.length'), 0);
+        assert.equal(copy.get('baz.foos.firstObject.property'), 'prop1');
+      });
+    });
+  });
+});
+
 module('sync copying', {
   beforeEach: function() {
     store = fabricate(startApp(), false);
@@ -134,6 +149,19 @@ test('it copies complex objects', function(assert) {
       assert.notEqual(copy.get('baz.id'), '1');
       assert.notEqual(copy.get('baz.foos.lastObject.id'), '2');
       assert.equal(copy.get('baz.foos.lastObject.property'), 'prop2');
+    });
+  });
+});
+
+test('it copies empty objects', function(assert) {
+  assert.expect(3);
+
+  var multi = store.getById('multi', '2');
+  return Ember.run(function() {
+    return multi.copy().then(function (copy) {
+      assert.notEqual(copy.get('id'), '2');
+      assert.equal(copy.get('bars.length'), 0);
+      assert.equal(copy.get('baz.foos.firstObject.property'), 'prop1');
     });
   });
 });

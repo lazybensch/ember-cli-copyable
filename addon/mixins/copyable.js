@@ -18,9 +18,8 @@ var Copyable = Ember.Mixin.create({
       });
 
       model.eachRelationship(function(rel, meta) {
-        console.log(_this.get(rel));
         if (Ember.none(_this.get(rel))) {
-          return;
+          return; //is this necessary?
         }
 
         if (_this.get(rel).constructor === DS.PromiseObject) {

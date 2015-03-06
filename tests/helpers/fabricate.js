@@ -70,6 +70,11 @@ var setupFixtures = function(app) {
         'id': '1',
         'bars': ['1'],
         'baz': '1'
+      },
+      {
+        'id': '2',
+        'bars': [],
+        'baz': '1'
       }
     ]
   });
