@@ -28,8 +28,7 @@ var Copyable = Ember.Mixin.create({
       });
 
       model.eachRelationship(function(rel, meta) {
-        if (Ember.none(_this.get(rel))) {
-          console.log('ACHTUNG');
+        if (!_this.get(rel)) {
           return;
         }
 
