@@ -15,7 +15,7 @@
   "engines": {
     "node": ">= 0.10.0"
   },
-  "author": "LazyBensch",
+  "author": "Benjamin Schoenburg <lazybensch@gmail.com>",
   "license": "MIT",
   "devDependencies": {
     "broccoli-asset-rev": "^2.0.0",
