@@ -93,8 +93,8 @@ test('it overwrites relations', function(assert) {
     return store.find('baz', '2').then( function(myBaz) {
       return store.find('multi', '1').then( function(multi) {
 
-        return multi.copy({baz: myBaz}).then(function (copy) {
-          assert.equal(copy.get('bars.firstObject.foo.property'), 'prop1');
+        return multi.copy({baz: myBaz, bars: []}).then(function (copy) {
+          assert.equal(copy.get('bars.length'), 0);
           assert.equal(copy.get('baz.foos.length'), 1);
         });
       });
