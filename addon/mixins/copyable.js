@@ -66,21 +66,23 @@ var Copyable = Ember.Mixin.create({
 
         } else if (_this.get(rel).constructor === DS.PromiseManyArray) {
 
-          queue.pushObject(_this.get(rel).then(function(array) {
+          if (overwrite) {
+            copy.get(rel).pushObjects(overwrite);
+          } else {
+            queue.pushObject(_this.get(rel).then(function(array) {
 
-            array.forEach(function(obj) {
-              if (obj.get('copyable')) {
-                return obj.copy(passedOptions).then(function(objCopy) {
-                  copy.get(rel).pushObject(objCopy);
-                });
+              array.forEach(function(obj) {
+                if (obj.get('copyable')) {
+                  return obj.copy(passedOptions).then(function(objCopy) {
+                    copy.get(rel).pushObject(objCopy);
+                  });
 
-              } else {
-                copy.get(rel).pushObject(obj);
-              }
-            });
-
-
-          }));
+                } else {
+                  copy.get(rel).pushObject(obj);
+                }
+              });
+            }));
+          }
 
         } else {
 
