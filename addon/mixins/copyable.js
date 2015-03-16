@@ -42,6 +42,9 @@ var Copyable = Ember.Mixin.create({
           case 'object':
               passedOptions = options[rel];
               break;
+          case 'array':
+              overwrite = options[rel];
+              break;
           default:
         }
 
@@ -106,12 +109,17 @@ var Copyable = Ember.Mixin.create({
                 return obj.copy(passedOptions);
               });
 
-              queue.pushObject( Ember.RSVP.all(copies).then( function(resolvedCopies) {
-                copy.get(rel).pushObjects(resolvedCopies);
-              }));
+              if (overwrite) {
+                copy.get(rel).pushObjects(overwrite);
+              } else {
+                queue.pushObject( Ember.RSVP.all(copies).then( function(resolvedCopies) {
+                  copy.get(rel).pushObjects(resolvedCopies);
+                }));
+              }
+
 
             } else {
-              copy.get(rel).pushObjects(objs);
+              copy.get(rel).pushObjects(overwrite || objs);
             }
           }
 
