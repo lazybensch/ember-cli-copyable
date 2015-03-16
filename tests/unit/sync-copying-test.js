@@ -87,8 +87,8 @@ test('it overwrites relations', function(assert) {
   var multi = store.getById('multi', '1');
   var myBaz = store.getById('baz', '2');
   return Ember.run(function() {
-    return multi.copy({baz: myBaz}).then(function (copy) {
-      assert.equal(copy.get('bars.firstObject.foo.property'), 'prop1');
+    return multi.copy({baz: myBaz, bars: []}).then(function (copy) {
+      assert.equal(copy.get('bars.length'), 0);
       assert.equal(copy.get('baz.foos.length'), myBaz.get('foos.length'));
     });
   });
