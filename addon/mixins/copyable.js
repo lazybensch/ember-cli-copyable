@@ -70,16 +70,22 @@ var Copyable = Ember.Mixin.create({
             copy.get(rel).pushObjects(overwrite);
           } else {
             queue.pushObject(_this.get(rel).then(function(array) {
+              return new Ember.RSVP.Promise(function(resolveArray) {
+                var arrayQueue = [];
 
-              array.forEach(function(obj) {
-                if (obj.get('copyable')) {
-                  return obj.copy(passedOptions).then(function(objCopy) {
-                    copy.get(rel).pushObject(objCopy);
-                  });
+                array.forEach(function(obj) {
+                  if (obj.get('copyable')) {
+                    arrayQueue.pushObject(obj.copy(passedOptions).then(function(objCopy) {
+                      return copy.get(rel).pushObject(objCopy);
+                    }));
+                  } else {
+                    copy.get(rel).pushObject(obj);
+                  }
+                });
 
-                } else {
-                  copy.get(rel).pushObject(obj);
-                }
+                Ember.RSVP.all(arrayQueue).then(function() {
+                  resolveArray(copy);
+                });
               });
             }));
           }
