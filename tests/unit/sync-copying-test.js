@@ -10,7 +10,7 @@ module('sync copying', {
   beforeEach: function() {
     store = fabricate(startApp(), false);
 
-    return Ember.RSVP.all(['foo','bar','baz','multi','fooBar','fooFix'].map(function(type) {
+    return Ember.RSVP.all(['foo','bar','baz','multi','fooBar','fooFix', 'FooEmpty'].map(function(type) {
       return store.find(type);
     }));
   }
@@ -46,6 +46,18 @@ test('it copies belongsTo relation', function(assert) {
     return bar.copy().then(function (copy) {
       assert.notEqual(copy.get('foo.id'), bar.get('foo.id'));
       assert.equal(copy.get('foo.property'), 'prop1');
+    });
+  });
+});
+
+test('it copies with empty belongsTo relation', function(assert) {
+  assert.expect(2);
+
+  var fooEmpty = store.getById('fooEmpty', '1');
+  return Ember.run(function() {
+    return fooEmpty.copy().then(function (copy) {
+      assert.equal(copy.get('property'), fooEmpty.get('property'));
+      assert.equal(copy.get('foo'), null);
     });
   });
 });
