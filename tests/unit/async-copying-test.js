@@ -51,6 +51,22 @@ test('it copies belongsTo relation', function(assert) {
   });
 });
 
+test('it copies with empty belongsTo relation', function(assert) {
+  assert.expect(2);
+
+  return Ember.run(function() {
+    return store.find('fooEmpty', '1').then( function(fooEmpty) {
+
+      return fooEmpty.copy().then(function (copy) {
+        assert.equal(copy.get('property'), fooEmpty.get('property'));
+        return copy.get('foo').then(function(foo) {
+          assert.equal(foo, null);
+        });
+      });
+    });
+  });
+});
+
 test('it copies hasMany relation', function(assert) {
   assert.expect(5);
 

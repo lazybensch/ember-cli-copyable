@@ -27,6 +27,11 @@ var setupModels = function(app, async) {
   app.FooBar = DS.Model.extend( Copyable, {
     fooFix: DS.belongsTo('fooFix', { async: async })
   });
+
+  app.FooEmpty = DS.Model.extend( Copyable, {
+    property: DS.attr('string'),
+    foo: DS.belongsTo('foo', { async: async })
+  });
 };
 
 var setupFixtures = function(app) {
@@ -100,6 +105,15 @@ var setupFixtures = function(app) {
       {
         'id': '1',
         'fooFix': '1'
+      }
+    ]
+  });
+
+  app.FooEmpty.reopenClass({
+    FIXTURES: [
+      {
+        'id': '1',
+        'property': '2'
       }
     ]
   });
