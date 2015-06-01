@@ -52,7 +52,7 @@ var Copyable = Ember.Mixin.create({
 
           queue.pushObject(_this.get(rel).then(function(obj) {
 
-            if (obj.get('copyable')) {
+            if (obj && obj.get('copyable')) {
               return obj.copy(passedOptions).then(function(objCopy) {
                 copy.set(rel, overwrite || objCopy);
               });
@@ -89,7 +89,7 @@ var Copyable = Ember.Mixin.create({
           if (meta.kind === 'belongsTo') {
             var obj = _this.get(rel);
 
-            if (obj.get('copyable')) {
+            if (obj && obj.get('copyable')) {
               queue.pushObject( obj.copy(passedOptions).then(function(objCopy) {
                 copy.set(rel, overwrite || objCopy);
               }));
