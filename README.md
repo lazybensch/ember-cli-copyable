@@ -149,7 +149,7 @@ For the next days I plan a few backwards compatible updates, including:
 
 To use this addon in your project, just type:
 ```
-$ ember install:addon ember-cli-copyable
+$ ember install ember-cli-copyable
 ```
 or for older versions of ember-cli *(pre 1.4.0)*:
 ```
