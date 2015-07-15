@@ -26,59 +26,58 @@ var Copyable = Ember.Mixin.create({
         }
       });
 
-      model.eachRelationship(function(rel, meta) {
-        if (!_this.get(rel)) {
-          return;
-        }
+      model.eachRelationship(function(relName, meta) {
+        var rel = _this.get(relName);
+        if (!rel) { return; }
 
         var overwrite;
         var passedOptions = {};
-        switch(Ember.typeOf(options[rel])) {
+        switch(Ember.typeOf(options[relName])) {
           case 'null':
               return;
           case 'instance':
-              overwrite = options[rel];
+              overwrite = options[relName];
               break;
           case 'object':
-              passedOptions = options[rel];
+              passedOptions = options[relName];
               break;
           case 'array':
-              overwrite = options[rel];
+              overwrite = options[relName];
               break;
           default:
         }
 
-        if (_this.get(rel).constructor === DS.PromiseObject) {
+        if (rel.constructor === DS.PromiseObject) {
 
-          queue.pushObject(_this.get(rel).then(function(obj) {
+          queue.pushObject(rel.then(function(obj) {
 
             if (obj && obj.get('copyable')) {
               return obj.copy(passedOptions).then(function(objCopy) {
-                copy.set(rel, overwrite || objCopy);
+                copy.set(relName, overwrite || objCopy);
               });
 
             } else {
-              copy.set(rel, overwrite || obj);
+              copy.set(relName, overwrite || obj);
             }
 
           }));
 
 
-        } else if (_this.get(rel).constructor === DS.PromiseManyArray) {
+        } else if (rel.constructor === DS.PromiseManyArray) {
 
           if (overwrite) {
-            copy.get(rel).pushObjects(overwrite);
+            copy.get(relName).pushObjects(overwrite);
           } else {
-            queue.pushObject(_this.get(rel).then(function(array) {
+            queue.pushObject(rel.then(function(array) {
 
               array.forEach(function(obj) {
                 if (obj.get('copyable')) {
                   return obj.copy(passedOptions).then(function(objCopy) {
-                    copy.get(rel).pushObject(objCopy);
+                    copy.get(relName).pushObject(objCopy);
                   });
 
                 } else {
-                  copy.get(rel).pushObject(obj);
+                  copy.get(relName).pushObject(obj);
                 }
               });
             }));
@@ -87,19 +86,19 @@ var Copyable = Ember.Mixin.create({
         } else {
 
           if (meta.kind === 'belongsTo') {
-            var obj = _this.get(rel);
+            var obj = rel;
 
             if (obj && obj.get('copyable')) {
               queue.pushObject( obj.copy(passedOptions).then(function(objCopy) {
-                copy.set(rel, overwrite || objCopy);
+                copy.set(relName, overwrite || objCopy);
               }));
 
             } else {
-              copy.set(rel, overwrite || obj);
+              copy.set(relName, overwrite || obj);
             }
 
           } else {
-            var objs = _this.get(rel);
+            var objs = rel;
 
             if (objs.get('content')) {
               objs = objs.get('content').compact();
@@ -112,16 +111,16 @@ var Copyable = Ember.Mixin.create({
               });
 
               if (overwrite) {
-                copy.get(rel).pushObjects(overwrite);
+                copy.get(relName).pushObjects(overwrite);
               } else {
                 queue.pushObject( Ember.RSVP.all(copies).then( function(resolvedCopies) {
-                  copy.get(rel).pushObjects(resolvedCopies);
+                  copy.get(relName).pushObjects(resolvedCopies);
                 }));
               }
 
 
             } else {
-              copy.get(rel).pushObjects(overwrite || objs);
+              copy.get(relName).pushObjects(overwrite || objs);
             }
           }
 
