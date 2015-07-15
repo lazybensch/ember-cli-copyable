@@ -10,7 +10,7 @@ var Copyable = Ember.Mixin.create({
     return new Ember.RSVP.Promise(function(resolve) {
 
       var model = _this.constructor;
-      var copy = _this.get('store').createRecord(model.typeKey);
+      var copy = _this.get('store').createRecord(model.modelName || model.typeKey);
       var queue = [];
 
       model.eachAttribute(function(attr) {
