@@ -72,7 +72,7 @@ export default Ember.Mixin.create({
               var resolvedCopies =
                 array.map(function(obj) {
                   if (obj.get('copyable')) {
-                    return obj.copy(passedOptions)
+                    return obj.copy(passedOptions);
                   } else {
                     return obj;
                   }
