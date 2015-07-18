@@ -102,6 +102,20 @@ test('it copies complex objects', function(assert) {
   });
 });
 
+test('it copies objects with nested hasMany', function(assert) {
+  assert.expect(1);
+
+  return Ember.run(function() {
+    return store.find('nestedList', '1').then( function(nested) {
+
+      return nested.copy().then(function (copy) {
+        assert.equal(copy.get('baz.firstObject.foos.firstObject.property'), 'prop1');
+
+      });
+    });
+  });
+});
+
 test('it overwrites relations', function(assert) {
   assert.expect(2);
 

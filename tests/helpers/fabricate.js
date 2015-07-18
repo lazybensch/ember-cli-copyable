@@ -15,6 +15,10 @@ var setupModels = function(app, async) {
     bar: DS.belongsTo('bar', {async: async })
   });
 
+  app.NestedList = DS.Model.extend( Copyable, {
+    baz: DS.hasMany('baz', {async: async })
+  });
+
   app.Multi = DS.Model.extend( Copyable, {
     bars: DS.hasMany('bar', {async: async }),
     baz: DS.belongsTo('baz', {async: async })
@@ -88,6 +92,15 @@ var setupFixtures = function(app) {
         'bars': [],
         'baz': '1'
       }
+    ]
+  });
+
+  app.NestedList.reopenClass({
+    FIXTURES: [
+      {
+        'id': '1',
+        'baz': ['1']
+      },
     ]
   });
 
