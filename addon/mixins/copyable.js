@@ -12,16 +12,27 @@ function copyFrom(original, copy, overwrite) {
   return copyFromKey.bind(null, original, copy, overwrite);
 }
 
-function copyFromKey(original, copy, overwrite, key) {
+function copyFromKey(original, copy, overwrite, key, options) {
   const substitute = get(overwrite, key);
   if (substitute === null || substitute === false || substitute === 0) {
     copy.set(key, substitute);
   } else {
-    copy.set(key, substitute || copyValue(get(original, key)));
+    const value = get(original, key);
+
+    let defaultCopy;
+    if (options && options.copy) {
+      defaultCopy = options.copy.bind(original)(value);
+    }
+
+    copy.set(key, substitute || defaultCopy || copyValue(value));
   }
 }
 
 function copyValue(obj) {
+  if (!obj) {
+    return obj;
+  }
+
   if (typeof obj.copy === 'function') {
     return obj.copy();
   } else {
@@ -42,12 +53,12 @@ export default Mixin.create({
     const copy = store.createRecord(camelize(objectClassKey));
     const copyFromKey = copyFrom(original, copy, overwrite);
 
-    attributes.forEach(({ name: key }) => {
-      copyFromKey(key);
+    attributes.forEach(({ name: key, options }) => {
+      copyFromKey(key, options);
     });
 
-    relationships.forEach(({ key }) => {
-      copyFromKey(key);
+    relationships.forEach(({ key, options }) => {
+      copyFromKey(key, options);
     });
 
     return copy;

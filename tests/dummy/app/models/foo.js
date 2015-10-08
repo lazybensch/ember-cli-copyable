@@ -14,6 +14,12 @@ export default Model.extend(Copyable, {
   boolOverwrite: attr('Boolean'),
   rawOverwrite: attr(),
 
+  strCustomCopy: attr('string', {
+    copy(property) {
+      return `${property} (copy)`;
+    }
+  }),
+
   rawCopyableWithFunction: attr(),
   rawCopyableWithProperty: attr(),
 

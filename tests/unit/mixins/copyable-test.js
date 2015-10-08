@@ -31,6 +31,8 @@ moduleForModel('foo', 'Mixin | Copyable', {
         copy: 'custom copy'
       },
 
+      strCustomCopy: 'custom',
+
       bar: store.createRecord('bar'),
       boos: [
         store.createRecord('boo'),
@@ -90,6 +92,7 @@ test('it overwrites attributes', function(assert) {
 test('it deeply copies attributes', function(assert) {
   assert.equal(copy.get('rawCopyableWithFunction'), 'custom copy', 'with copy functions');
   assert.equal(copy.get('rawCopyableWithProperty'), 'custom copy', 'with copy properties');
+  assert.equal(copy.get('strCustomCopy'), 'custom (copy)', 'with copy options');
 });
 
 test('it shallow copies relationships', function(assert) {
