@@ -24,9 +24,11 @@ export default Model.extend(Copyable, {
   rawCopyableWithProperty: attr(),
 
   bar: belongsTo('bar'),
-  boos: hasMany('boo'),
+  bars: hasMany('bar'),
+  faa: belongsTo('faa'),
+  faas: hasMany('faa'),
 
   barOverwrite: belongsTo('bar'),
-  boosOverwrite: hasMany('boo')
+  barsOverwrite: hasMany('bar')
 
 });

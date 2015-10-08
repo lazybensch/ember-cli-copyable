@@ -4,7 +4,7 @@ const { run } = Ember;
 
 let subject, copy;
 moduleForModel('foo', 'Mixin | Copyable', {
-  needs: ['model:bar', 'model:boo'],
+  needs: ['model:bar', 'model:faa'],
   beforeEach(assert) {
     const done = assert.async();
     const store = this.store();
@@ -20,31 +20,37 @@ moduleForModel('foo', 'Mixin | Copyable', {
       boolOverwrite: true,
 
       rawCopyableWithFunction: {
-        identifier: 1,
         copy() {
           return 'custom copy';
         }
       },
 
       rawCopyableWithProperty: {
-        identifier: 1,
         copy: 'custom copy'
       },
 
       strCustomCopy: 'custom',
 
       bar: store.createRecord('bar'),
-      boos: [
-        store.createRecord('boo'),
-        store.createRecord('boo'),
-        store.createRecord('boo')
+      bars: [
+        store.createRecord('bar'),
+        store.createRecord('bar'),
+        store.createRecord('bar')
       ],
 
-      barOverwrite: store.createRecord('bar', { identifier: 1 }),
-      boosOverwrite: [
-        store.createRecord('boo', { identifier: 0 }),
-        store.createRecord('boo', { identifier: 1 }),
-        store.createRecord('boo', { identifier: 2 })
+      faa: store.createRecord('faa'),
+      faas: [
+        store.createRecord('faa'),
+        store.createRecord('faa'),
+        store.createRecord('faa')
+      ],
+
+
+      barOverwrite: store.createRecord('bar'),
+      barsOverwrite: [
+        store.createRecord('bar'),
+        store.createRecord('bar'),
+        store.createRecord('bar')
       ]
     });
 
@@ -56,10 +62,10 @@ moduleForModel('foo', 'Mixin | Copyable', {
         boolOverwrite: false,
 
         barOverwrite: store.createRecord('bar', { identifier: 2 }),
-        boosOverwrite: [
-          store.createRecord('boo', { identifier: 0 }),
-          store.createRecord('boo', { identifier: 2 }),
-          store.createRecord('boo', { identifier: 4 })
+        barsOverwrite: [
+          store.createRecord('bar', { identifier: 0 }),
+          store.createRecord('bar', { identifier: 2 }),
+          store.createRecord('bar', { identifier: 4 })
         ]
       });
       done();
@@ -97,15 +103,27 @@ test('it deeply copies attributes', function(assert) {
 
 test('it shallow copies relationships', function(assert) {
   assert.equal(copy.get('bar'), subject.get('bar'), 'of type belongsTo');
-  subject.get('boos').forEach((boo, index) => {
-    assert.equal(copy.get('boos').objectAt(index), boo, 'of type HasMany');
+  subject.get('bars').forEach((bar, index) => {
+    assert.equal(copy.get('bars').objectAt(index), bar, 'of type HasMany');
   });
 });
 
 test('it overwrites relationships', function(assert) {
   assert.equal(copy.get('barOverwrite.identifier'), 2, 'of type belongsTo');
-  subject.get('boosOverwrite').forEach((boo, index) => {
-    const copyBoo = copy.get('boosOverwrite').objectAt(index);
-    assert.equal(copyBoo.get('identifier'), 2*index, 'of type HasMany');
+  subject.get('barsOverwrite').forEach((bar, index) => {
+    const copyBar = copy.get('barsOverwrite').objectAt(index);
+    assert.equal(copyBar.get('identifier'), 2*index, 'of type HasMany');
+  });
+});
+
+test('it deeply copies relationships', function(assert) {
+  assert.ok(copy.get('faa'), 'of type belongsTo');
+  assert.equal(copy.get('faa.constructor.modelName') , 'faa', 'of type belongsTo');
+  assert.notEqual(copy.get('faa'), subject.get('faa'), 'of type belongsTo');
+  subject.get('faas').forEach((faa, index) => {
+    const copyFaa = copy.get('faas').objectAt(index);
+    assert.ok(copyFaa, 'of type hasMany');
+    assert.equal(copyFaa.get('constructor.modelName') , 'faa', 'of type hasMany');
+    assert.equal(copyFaa, faa, 'of type HasMany');
   });
 });
