@@ -3,7 +3,7 @@ import Ember from 'ember';
 const { run } = Ember;
 
 let subject, copy;
-moduleForModel('foo', 'copy on Foo', {
+moduleForModel('foo', 'Mixin | Copyable', {
   needs: ['model:bar', 'model:boo'],
   beforeEach(assert) {
     const done = assert.async();
@@ -18,6 +18,18 @@ moduleForModel('foo', 'copy on Foo', {
       numOverwrite: 3,
       rawOverwrite: [1,2, new Date(), { a: 'b' }],
       boolOverwrite: true,
+
+      rawCopyableWithFunction: {
+        identifier: 1,
+        copy() {
+          return 'custom copy';
+        }
+      },
+
+      rawCopyableWithProperty: {
+        identifier: 1,
+        copy: 'custom copy'
+      },
 
       bar: store.createRecord('bar'),
       boos: [
@@ -73,6 +85,11 @@ test('it overwrites attributes', function(assert) {
   assert.equal(copy.get('numOverwrite'), -1, 'of type Number');
   assert.equal(copy.get('rawOverwrite'), null);
   assert.equal(copy.get('boolOverwrite'), false, 'of type Boolean');
+});
+
+test('it deeply copies attributes', function(assert) {
+  assert.equal(copy.get('rawCopyableWithFunction'), 'custom copy', 'with copy functions');
+  assert.equal(copy.get('rawCopyableWithProperty'), 'custom copy', 'with copy properties');
 });
 
 test('it shallow copies relationships', function(assert) {

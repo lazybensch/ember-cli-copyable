@@ -14,6 +14,9 @@ export default Model.extend(Copyable, {
   boolOverwrite: attr('Boolean'),
   rawOverwrite: attr(),
 
+  rawCopyableWithFunction: attr(),
+  rawCopyableWithProperty: attr(),
+
   bar: belongsTo('bar'),
   boos: hasMany('boo'),
 

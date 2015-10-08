@@ -17,7 +17,15 @@ function copyFromKey(original, copy, overwrite, key) {
   if (substitute === null || substitute === false || substitute === 0) {
     copy.set(key, substitute);
   } else {
-    copy.set(key, substitute || get(original, key));
+    copy.set(key, substitute || copyValue(get(original, key)));
+  }
+}
+
+function copyValue(obj) {
+  if (typeof obj.copy === 'function') {
+    return obj.copy();
+  } else {
+    return get(obj, 'copy') || obj;
   }
 }
 
