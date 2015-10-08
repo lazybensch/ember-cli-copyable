@@ -8,16 +8,21 @@ const {
   camelize
 } = Ember.String;
 
-function copyFrom(original, copy) {
-  return copyFromKey.bind(null, original, copy);
+function copyFrom(original, copy, overwrite) {
+  return copyFromKey.bind(null, original, copy, overwrite);
 }
 
-function copyFromKey(original, copy, key) {
-  copy.set(key, get(original, key));
+function copyFromKey(original, copy, overwrite, key) {
+  const substitute = get(overwrite, key);
+  if (substitute === null || substitute === false || substitute === 0) {
+    copy.set(key, substitute);
+  } else {
+    copy.set(key, substitute || get(original, key));
+  }
 }
 
 export default Mixin.create({
-  copy() {
+  copy(overwrite = {}) {
 
     const original = this;
     const store = this.get('store');
@@ -27,7 +32,7 @@ export default Mixin.create({
     const relationships = get(ObjectClass, 'relationshipsByName');
 
     const copy = store.createRecord(camelize(objectClassKey));
-    const copyFromKey = copyFrom(original, copy);
+    const copyFromKey = copyFrom(original, copy, overwrite);
 
     attributes.forEach(({ name: key }) => {
       copyFromKey(key);

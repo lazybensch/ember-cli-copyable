@@ -9,7 +9,15 @@ export default Model.extend(Copyable, {
   bool: attr('Boolean'),
   raw: attr(),
 
+  strOverwrite: attr('string'),
+  numOverwrite: attr('Number'),
+  boolOverwrite: attr('Boolean'),
+  rawOverwrite: attr(),
+
   bar: belongsTo('bar'),
-  boos: hasMany('boo')
+  boos: hasMany('boo'),
+
+  barOverwrite: belongsTo('bar'),
+  boosOverwrite: hasMany('boo')
 
 });
