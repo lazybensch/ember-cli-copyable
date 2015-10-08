@@ -51,7 +51,10 @@ moduleForModel('foo', 'Mixin | Copyable', {
         store.createRecord('bar'),
         store.createRecord('bar'),
         store.createRecord('bar')
-      ]
+      ],
+
+      faaNestedWithProperty: store.createRecord('faa', { str: 'original' }),
+      faaNestedWithFunction: store.createRecord('faa', { str: 'original' }),
     });
 
     run(() => {
@@ -66,7 +69,14 @@ moduleForModel('foo', 'Mixin | Copyable', {
           store.createRecord('bar', { identifier: 0 }),
           store.createRecord('bar', { identifier: 2 }),
           store.createRecord('bar', { identifier: 4 })
-        ]
+        ],
+
+        faaNestedWithProperty: { str: 'altered' },
+        faaNestedWithFunction: {
+          str(property) {
+            return `${property} (altered)`;
+          }
+        }
       });
       done();
     });
@@ -114,6 +124,11 @@ test('it overwrites relationships', function(assert) {
     const copyBar = copy.get('barsOverwrite').objectAt(index);
     assert.equal(copyBar.get('identifier'), 2*index, 'of type HasMany');
   });
+});
+
+test('it deeply overwrites relationships', function(assert) {
+  assert.equal(copy.get('faaNestedWithProperty.str'), 'altered', 'of type belongsTo');
+  assert.equal(copy.get('faaNestedWithFunction.str'), 'original (altered)', 'of type belongsTo');
 });
 
 test('it deeply copies relationships', function(assert) {

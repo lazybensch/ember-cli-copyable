@@ -1,7 +1,8 @@
 import Ember from 'ember';
 const {
   get,
-  Mixin
+  Mixin,
+  typeOf
 } = Ember;
 
 const {
@@ -13,28 +14,36 @@ function copyFrom(original, copy, overwrite) {
 }
 
 function copyFromKey(original, copy, overwrite, key, options) {
-  const substitute = get(overwrite, key);
-  if (substitute === null || substitute === false || substitute === 0) {
+  let substitute = get(overwrite, key);
+  if ((substitute === null || substitute === false || substitute === 0)) {
     copy.set(key, substitute);
   } else {
     const value = get(original, key);
 
-    let defaultCopy;
     if (options && options.copy) {
-      defaultCopy = options.copy.bind(original)(value);
+      substitute = options.copy.bind(original)(value);
     }
 
-    copy.set(key, substitute || defaultCopy || copyValue(value));
+    if (typeOf(substitute) === 'function') {
+      substitute = substitute.bind(original)(value);
+    }
+
+    if (typeOf(substitute) === 'object') {
+      copy.set(key, copyValue(value, substitute));
+    } else {
+      copy.set(key, substitute || copyValue(value));
+    }
+
   }
 }
 
-function copyValue(obj) {
+function copyValue(obj, overwrite) {
   if (!obj) {
     return obj;
   }
 
-  if (typeof obj.copy === 'function') {
-    return obj.copy();
+  if (typeOf(obj.copy) === 'function') {
+    return obj.copy(overwrite);
   } else {
     return get(obj, 'copy') || obj;
   }

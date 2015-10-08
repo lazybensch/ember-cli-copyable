@@ -29,6 +29,9 @@ export default Model.extend(Copyable, {
   faas: hasMany('faa'),
 
   barOverwrite: belongsTo('bar'),
-  barsOverwrite: hasMany('bar')
+  barsOverwrite: hasMany('bar'),
+
+  faaNestedWithProperty: belongsTo('faa'),
+  faaNestedWithFunction: belongsTo('faa')
 
 });
