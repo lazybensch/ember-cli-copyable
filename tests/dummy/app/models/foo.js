@@ -1,6 +1,6 @@
-import DS from 'ember-data';
+import EmberData from 'ember-data';
 import Copyable from 'ember-cli-copyable/mixins/copyable';
-const { Model, attr, belongsTo, hasMany } = DS;
+const { Model, attr, belongsTo } = EmberData;
 
 export default Model.extend(Copyable, {
 
@@ -23,15 +23,15 @@ export default Model.extend(Copyable, {
   rawCopyableWithFunction: attr(),
   rawCopyableWithProperty: attr(),
 
-  bar: belongsTo('bar'),
-  bars: hasMany('bar'),
-  faa: belongsTo('faa'),
-  faas: hasMany('faa'),
-
-  barOverwrite: belongsTo('bar'),
-  barsOverwrite: hasMany('bar'),
-
-  faaNestedWithProperty: belongsTo('faa'),
-  faaNestedWithFunction: belongsTo('faa')
+  bar: belongsTo('bar') //,
+//  bars: hasMany('bar'),
+//  faa: belongsTo('faa'),
+//  faas: hasMany('faa'),
+//
+//  barOverwrite: belongsTo('bar'),
+//  barsOverwrite: hasMany('bar'),
+//
+//  faaNestedWithProperty: belongsTo('faa'),
+//  faaNestedWithFunction: belongsTo('faa')
 
 });

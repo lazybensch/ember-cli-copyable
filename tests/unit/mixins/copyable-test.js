@@ -32,29 +32,29 @@ moduleForModel('foo', 'Mixin | Copyable', {
       strCustomCopy: 'custom',
 
       bar: store.createRecord('bar'),
-      bars: [
-        store.createRecord('bar'),
-        store.createRecord('bar'),
-        store.createRecord('bar')
-      ],
-
-      faa: store.createRecord('faa'),
-      faas: [
-        store.createRecord('faa'),
-        store.createRecord('faa'),
-        store.createRecord('faa')
-      ],
-
-
-      barOverwrite: store.createRecord('bar'),
-      barsOverwrite: [
-        store.createRecord('bar'),
-        store.createRecord('bar'),
-        store.createRecord('bar')
-      ],
-
-      faaNestedWithProperty: store.createRecord('faa', { str: 'original' }),
-      faaNestedWithFunction: store.createRecord('faa', { str: 'original' }),
+//      bars: [
+//        store.createRecord('bar'),
+//        store.createRecord('bar'),
+//        store.createRecord('bar')
+//      ],
+//
+//      faa: store.createRecord('faa'),
+//      faas: [
+//        store.createRecord('faa'),
+//        store.createRecord('faa'),
+//        store.createRecord('faa')
+//      ],
+//
+//
+//      barOverwrite: store.createRecord('bar'),
+//      barsOverwrite: [
+//        store.createRecord('bar'),
+//        store.createRecord('bar'),
+//        store.createRecord('bar')
+//      ],
+//
+//      faaNestedWithProperty: store.createRecord('faa', { str: 'original' }),
+//      faaNestedWithFunction: store.createRecord('faa', { str: 'original' }),
     });
 
     run(() => {
@@ -62,21 +62,21 @@ moduleForModel('foo', 'Mixin | Copyable', {
         strOverwrite: 'something else',
         numOverwrite: -1,
         rawOverwrite: null,
-        boolOverwrite: false,
+        boolOverwrite: false //,
 
-        barOverwrite: store.createRecord('bar', { identifier: 2 }),
-        barsOverwrite: [
-          store.createRecord('bar', { identifier: 0 }),
-          store.createRecord('bar', { identifier: 2 }),
-          store.createRecord('bar', { identifier: 4 })
-        ],
-
-        faaNestedWithProperty: { str: 'altered' },
-        faaNestedWithFunction: {
-          str(property) {
-            return `${property} (altered)`;
-          }
-        }
+//        barOverwrite: store.createRecord('bar', { identifier: 2 }),
+//        barsOverwrite: [
+//          store.createRecord('bar', { identifier: 0 }),
+//          store.createRecord('bar', { identifier: 2 }),
+//          store.createRecord('bar', { identifier: 4 })
+//        ],
+//
+//        faaNestedWithProperty: { str: 'altered' },
+//        faaNestedWithFunction: {
+//          str(property) {
+//            return `${property} (altered)`;
+//          }
+//        }
       });
       done();
     });
@@ -112,33 +112,52 @@ test('it deeply copies attributes', function(assert) {
 });
 
 test('it shallow copies relationships', function(assert) {
-  assert.equal(copy.get('bar'), subject.get('bar'), 'of type belongsTo');
-  subject.get('bars').forEach((bar, index) => {
-    assert.equal(copy.get('bars').objectAt(index), bar, 'of type HasMany');
+  const done = assert.async();
+  run(() => {
+    console.log(copy.get('bar'));
+    debugger;
+    done;
   });
 });
 
-test('it overwrites relationships', function(assert) {
-  assert.equal(copy.get('barOverwrite.identifier'), 2, 'of type belongsTo');
-  subject.get('barsOverwrite').forEach((bar, index) => {
-    const copyBar = copy.get('barsOverwrite').objectAt(index);
-    assert.equal(copyBar.get('identifier'), 2*index, 'of type HasMany');
-  });
-});
+// test('it shallow copies relationships', function(assert) {
+//   assert.expect(1);
+//   // assert.notEqual(copy.get('bar'), subject.get('bar'), 'of type belongsTo');
+//   console.log(1);
+//   copy.get('bar').then(copyBar => {
+//     console.log(2);
+//     subject.get('bar').then(subjectBar => {
+//       console.log(3);
+//       debugger;
+//       assert.equal(copyBar, subjectBar, 'of type belongsTo');
+//     });
+//   });
+//   //subject.get('bars').forEach((bar, index) => {
+//     //assert.equal(copy.get('bars').objectAt(index), bar, 'of type HasMany');
+//   //});
+// });
 
-test('it deeply overwrites relationships', function(assert) {
-  assert.equal(copy.get('faaNestedWithProperty.str'), 'altered', 'of type belongsTo');
-  assert.equal(copy.get('faaNestedWithFunction.str'), 'original (altered)', 'of type belongsTo');
-});
-
-test('it deeply copies relationships', function(assert) {
-  assert.ok(copy.get('faa'), 'of type belongsTo');
-  assert.equal(copy.get('faa.constructor.modelName') , 'faa', 'of type belongsTo');
-  assert.notEqual(copy.get('faa'), subject.get('faa'), 'of type belongsTo');
-  subject.get('faas').forEach((faa, index) => {
-    const copyFaa = copy.get('faas').objectAt(index);
-    assert.ok(copyFaa, 'of type hasMany');
-    assert.equal(copyFaa.get('constructor.modelName') , 'faa', 'of type hasMany');
-    assert.equal(copyFaa, faa, 'of type HasMany');
-  });
-});
+//test('it overwrites relationships', function(assert) {
+//  assert.equal(copy.get('barOverwrite.identifier'), 2, 'of type belongsTo');
+//  subject.get('barsOverwrite').forEach((bar, index) => {
+//    const copyBar = copy.get('barsOverwrite').objectAt(index);
+//    assert.equal(copyBar.get('identifier'), 2*index, 'of type HasMany');
+//  });
+//});
+//
+//test('it deeply overwrites relationships', function(assert) {
+//  assert.equal(copy.get('faaNestedWithProperty.str'), 'altered', 'of type belongsTo');
+//  assert.equal(copy.get('faaNestedWithFunction.str'), 'original (altered)', 'of type belongsTo');
+//});
+//
+//test('it deeply copies relationships', function(assert) {
+//  assert.ok(copy.get('faa'), 'of type belongsTo');
+//  assert.equal(copy.get('faa.constructor.modelName') , 'faa', 'of type belongsTo');
+//  assert.notEqual(copy.get('faa'), subject.get('faa'), 'of type belongsTo');
+//  subject.get('faas').forEach((faa, index) => {
+//    const copyFaa = copy.get('faas').objectAt(index);
+//    assert.ok(copyFaa, 'of type hasMany');
+//    assert.equal(copyFaa.get('constructor.modelName') , 'faa', 'of type hasMany');
+//    assert.equal(copyFaa, faa, 'of type HasMany');
+//  });
+//});

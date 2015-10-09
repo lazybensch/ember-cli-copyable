@@ -1,7 +1,9 @@
 import Ember from 'ember';
+import DS from 'ember-data';
 const {
   get,
   Mixin,
+  ObjectProxy,
   typeOf
 } = Ember;
 
@@ -9,16 +11,38 @@ const {
   camelize
 } = Ember.String;
 
+const {
+  PromiseObject,
+  PromiseManyArray
+} = DS;
+
 function copyFrom(original, copy, overwrite) {
   return copyFromKey.bind(null, original, copy, overwrite);
 }
 
 function copyFromKey(original, copy, overwrite, key, options) {
+
   let substitute = get(overwrite, key);
   if ((substitute === null || substitute === false || substitute === 0)) {
-    copy.set(key, substitute);
+    return substitute;
+  }
+
+  const value = get(original, key);
+
+  if (get(value, 'constructor') === PromiseObject) {
+    const asdf = PromiseObject.create({
+      promise: value.then((value) => {
+        return value;
+      })
+    });
+
+    asdf.then(x => console.log('WTF', x));
+    return asdf;
+
+  } else if (get(value, 'constructor') === PromiseManyArray) {
+    // console.log(key, value.constructor);
+    return [];
   } else {
-    const value = get(original, key);
 
     if (options && options.copy) {
       substitute = options.copy.bind(original)(value);
@@ -29,9 +53,9 @@ function copyFromKey(original, copy, overwrite, key, options) {
     }
 
     if (typeOf(substitute) === 'object') {
-      copy.set(key, copyValue(value, substitute));
+      return copyValue(value, substitute);
     } else {
-      copy.set(key, substitute || copyValue(value));
+      return substitute || copyValue(value);
     }
 
   }
@@ -59,15 +83,23 @@ export default Mixin.create({
     const attributes = get(ObjectClass, 'attributes');
     const relationships = get(ObjectClass, 'relationshipsByName');
 
-    const copy = store.createRecord(camelize(objectClassKey));
+    const copy = store.createRecord(camelize(objectClassKey), {
+      bar: ObjectProxy.create({
+        content: store.createRecord('bar')
+      })
+    });
     const copyFromKey = copyFrom(original, copy, overwrite);
 
     attributes.forEach(({ name: key, options }) => {
-      copyFromKey(key, options);
+      const value = copyFromKey(key, options);
+      copy.set(key, value);
     });
 
     relationships.forEach(({ key, options }) => {
-      copyFromKey(key, options);
+      //const value = copyFromKey(key, options);
+      //value.then(x => console.log('FTW', x));
+      //copy.set(key, value);
+      //copy.get(key).then(x => console.log('WWW', x));
     });
 
     return copy;
