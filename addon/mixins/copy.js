@@ -3,6 +3,23 @@ import DS from 'ember-data';
 const { PromiseObject } = DS;
 const { String: { camelize }, get, set, Mixin, typeOf, RSVP } = Ember;
 
+function getCustom(key, custom) {
+  let value = this.get(key);
+
+  return new RSVP.Promise(resolve => {
+    if (typeOf(custom) === 'function') {
+      const customValue = custom.bind(this)(value, this);
+      if (customValue && customValue.then) {
+        return customValue.then(resolve);
+      } else {
+        return resolve(customValue);
+      }
+    } else {
+      return resolve(custom);
+    }
+  });
+}
+
 function getCopy(key, kind) {
   let value = this.get(key);
 
@@ -37,10 +54,13 @@ export default Mixin.create({
   copy() {
 
     const properties = {};
-    const addProperties = (_, { name, key = key || name, kind }) => {
-      const valuePromise = getCopy.bind(this)(key, kind);
-      set(properties, key, valuePromise);
-    }
+    const addProperties = (_, { name, key = key || name, kind, options: { copy: custom } }) => { // jshint ignore:line
+      if (custom !== undefined) {
+        set(properties, key, getCustom.bind(this)(key, custom));
+      } else {
+        set(properties, key, getCopy.bind(this)(key, kind));
+      }
+    };
 
     this.eachRelationship(addProperties);
     this.eachAttribute(addProperties);
