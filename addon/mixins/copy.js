@@ -1,48 +1,28 @@
 import Ember from 'ember';
 import DS from 'ember-data';
-const { camelize } = Ember.String;
 const { PromiseObject } = DS;
-
-const {
-  get,
-  set,
-  Mixin,
-  typeOf,
-  RSVP
-} = Ember;
+const { String: { camelize }, get, set, Mixin, typeOf, RSVP } = Ember;
 
 function getCopy(key, kind) {
-  const value = this.get(key);
+  let value = this.get(key);
 
-  return new RSVP.Promise((resolve,reject) => {
+  if (!value || !value.then) {
+    value = RSVP.resolve(value);
+  }
 
-    if (!value) {
-      resolve(value);
-    }
-
-    if (kind === 'belongsTo') {
-
-      if (value.then) {
-        value.then(value => resolve(copyValue(value)), err => reject(err));
-      } else {
-        resolve(copyValue(value));
+  return new RSVP.Promise(resolve => {
+    value.then(value => {
+      if (!value) {
+        return resolve(value);
       }
 
-    } else if (kind === 'hasMany'){
-
-      if (value.then) {
-        value.then(value => resolve(value.map(item => copyValue(item))), err => reject(err));
+      if (kind === 'hasMany'){
+        return RSVP.all(value.map(item => item ? copyValue(item) : item)).then(resolve);
       } else {
-        resolve(copyValue(value.map(item => copyValue(item))));
+        return resolve(copyValue(value));
       }
-
-    } else {
-
-      resolve(value);
-
-    }
-
-  })
+    });
+  });
 }
 
 function copyValue(value, overwrite) {
@@ -56,28 +36,22 @@ function copyValue(value, overwrite) {
 export default Mixin.create({
   copy() {
 
-    const store = this.get('store');
-    const ObjectClass = this.get('constructor');
-    const objectClassKey = get(ObjectClass, 'modelName');
-    console.log(`copying a "${objectClassKey}" object`);
     const properties = {};
-
-    this.eachRelationship((_, { key, kind }) => {
+    const addProperties = (_, { name, key = key || name, kind }) => {
       const valuePromise = getCopy.bind(this)(key, kind);
       set(properties, key, valuePromise);
-    });
+    }
 
-    this.eachAttribute((_, { name: key }) => {
-      const valuePromise = getCopy.bind(this)(key, null);
-      set(properties, key, valuePromise);
-    });
+    this.eachRelationship(addProperties);
+    this.eachAttribute(addProperties);
 
-    const promise = RSVP.hash(properties).then(properties => {
-      console.log(`"${objectClassKey}" object created, with:`, properties);
-      return store.createRecord(camelize(objectClassKey), properties);
-    });
+    const store = this.get('store');
+    const classKey = camelize(this.get('constructor.modelName'));
 
-    return PromiseObject.create({ promise });
+    return PromiseObject.create({
+      promise: RSVP.hash(properties).then(properties => {
+        return store.createRecord(classKey, properties);
+      })
+    });
   }
 });
-
