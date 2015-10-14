@@ -1,107 +1,79 @@
 import Ember from 'ember';
 import DS from 'ember-data';
-const {
-  get,
-  Mixin,
-  ObjectProxy,
-  typeOf
-} = Ember;
+const { PromiseObject } = DS;
+const { String: { camelize }, get, set, Mixin, typeOf, RSVP } = Ember;
 
-const {
-  camelize
-} = Ember.String;
+function getCustom(key, custom) {
+  let value = this.get(key);
 
-const {
-  PromiseObject,
-  PromiseManyArray
-} = DS;
-
-function copyFrom(original, copy, overwrite) {
-  return copyFromKey.bind(null, original, copy, overwrite);
-}
-
-function copyFromKey(original, copy, overwrite, key, options) {
-
-  let substitute = get(overwrite, key);
-  if ((substitute === null || substitute === false || substitute === 0)) {
-    return substitute;
-  }
-
-  const value = get(original, key);
-
-  if (get(value, 'constructor') === PromiseObject) {
-    const asdf = PromiseObject.create({
-      promise: value.then((value) => {
-        return value;
-      })
-    });
-
-    asdf.then(x => console.log('WTF', x));
-    return asdf;
-
-  } else if (get(value, 'constructor') === PromiseManyArray) {
-    // console.log(key, value.constructor);
-    return [];
-  } else {
-
-    if (options && options.copy) {
-      substitute = options.copy.bind(original)(value);
-    }
-
-    if (typeOf(substitute) === 'function') {
-      substitute = substitute.bind(original)(value);
-    }
-
-    if (typeOf(substitute) === 'object') {
-      return copyValue(value, substitute);
+  return new RSVP.Promise(resolve => {
+    if (typeOf(custom) === 'function') {
+      const customValue = custom.bind(this)(value, this);
+      if (customValue && customValue.then) {
+        return customValue.then(resolve);
+      } else {
+        return resolve(customValue);
+      }
     } else {
-      return substitute || copyValue(value);
+      return resolve(custom);
     }
-
-  }
+  });
 }
 
-function copyValue(obj, overwrite) {
-  if (!obj) {
-    return obj;
+function getCopy(key, kind, option) {
+  let value = this.get(key);
+
+  if (!value || !value.then) {
+    value = RSVP.resolve(value);
   }
 
-  if (typeOf(obj.copy) === 'function') {
-    return obj.copy(overwrite);
+  return new RSVP.Promise(resolve => {
+    value.then(value => {
+      if (!value) {
+        return resolve(value);
+      }
+
+      if (kind === 'hasMany'){
+        return RSVP.all(value.map(item => item ? copyValue(item, option) : item)).then(resolve);
+      } else {
+        return resolve(copyValue(value, option));
+      }
+    });
+  });
+}
+
+function copyValue(value, option) {
+  if (typeOf(value.copy) === 'function') {
+    return value.copy(option);
   } else {
-    return get(obj, 'copy') || obj;
+    return get(value, 'copy') || value;
   }
 }
 
 export default Mixin.create({
-  copy(overwrite = {}) {
+  copy(options = {}) {
 
-    const original = this;
+    const properties = {};
+    const addProperties = (_, { name, key = key || name, kind, options: { copy: custom } }) => { // jshint ignore:line
+      const option = options[key] || custom;
+
+      if (option !== undefined && (kind ? typeOf(option) !== 'object' : true)) {
+        set(properties, key, getCustom.bind(this)(key, option));
+      } else {
+        set(properties, key, getCopy.bind(this)(key, kind, option));
+      }
+    };
+
+    this.eachRelationship(addProperties);
+    this.eachAttribute(addProperties);
+
     const store = this.get('store');
-    const ObjectClass = this.get('constructor');
-    const objectClassKey = get(ObjectClass, 'modelName');
-    const attributes = get(ObjectClass, 'attributes');
-    const relationships = get(ObjectClass, 'relationshipsByName');
+    const classKey = camelize(this.get('constructor.modelName'));
 
-    const copy = store.createRecord(camelize(objectClassKey), {
-      bar: ObjectProxy.create({
-        content: store.createRecord('bar')
+    return PromiseObject.create({
+      promise: RSVP.hash(properties).then(properties => {
+        return store.createRecord(classKey, properties);
       })
     });
-    const copyFromKey = copyFrom(original, copy, overwrite);
-
-    attributes.forEach(({ name: key, options }) => {
-      const value = copyFromKey(key, options);
-      copy.set(key, value);
-    });
-
-    relationships.forEach(({ key, options }) => {
-      //const value = copyFromKey(key, options);
-      //value.then(x => console.log('FTW', x));
-      //copy.set(key, value);
-      //copy.get(key).then(x => console.log('WWW', x));
-    });
-
-    return copy;
   }
 });

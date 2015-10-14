@@ -1,5 +1,5 @@
 import EmberData from 'ember-data';
-import Copyable from 'ember-cli-copyable/mixins/copy';
+import Copyable from 'ember-cli-copyable/mixins/copyable';
 import Ember from 'ember';
 const { Model, attr, belongsTo, hasMany } = EmberData;
 const { resolve } = Ember.RSVP;
