@@ -20,7 +20,7 @@ function getCustom(key, custom) {
   });
 }
 
-function getCopy(key, kind) {
+function getCopy(key, kind, option) {
   let value = this.get(key);
 
   if (!value || !value.then) {
@@ -34,31 +34,33 @@ function getCopy(key, kind) {
       }
 
       if (kind === 'hasMany'){
-        return RSVP.all(value.map(item => item ? copyValue(item) : item)).then(resolve);
+        return RSVP.all(value.map(item => item ? copyValue(item, option) : item)).then(resolve);
       } else {
-        return resolve(copyValue(value));
+        return resolve(copyValue(value, option));
       }
     });
   });
 }
 
-function copyValue(value, overwrite) {
+function copyValue(value, option) {
   if (typeOf(value.copy) === 'function') {
-    return value.copy(overwrite);
+    return value.copy(option);
   } else {
     return get(value, 'copy') || value;
   }
 }
 
 export default Mixin.create({
-  copy() {
+  copy(options = {}) {
 
     const properties = {};
     const addProperties = (_, { name, key = key || name, kind, options: { copy: custom } }) => { // jshint ignore:line
-      if (custom !== undefined) {
-        set(properties, key, getCustom.bind(this)(key, custom));
+      const option = options[key] || custom;
+
+      if (option !== undefined && (kind ? typeOf(option) !== 'object' : true)) {
+        set(properties, key, getCustom.bind(this)(key, option));
       } else {
-        set(properties, key, getCopy.bind(this)(key, kind));
+        set(properties, key, getCopy.bind(this)(key, kind, option));
       }
     };
 
