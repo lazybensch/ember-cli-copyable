@@ -164,8 +164,8 @@ import Copyable from 'ember-cli-copyable;
 
 Im happy about everyone that wants to contribute.
 
-* `git clone https://github.com/lazybensch/ember-cli-sync-for-each`
-* `cd ember-cli-sync-for-each`
+* `git clone https://github.com/lazybensch/ember-cli-copyable`
+* `cd ember-cli-copyable`
 * `npm install`
 * `bower install`
 * `ember test`
