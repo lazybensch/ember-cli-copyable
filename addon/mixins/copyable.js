@@ -3,14 +3,20 @@ import DS from 'ember-data';
 
 export default Ember.Mixin.create({
   copyable: true,
-  copy: function(options) {
+  copy: function (options) {
+    options = options || {};
+
+    var model = this.constructor;
+    var copy = this.get('store').createRecord(model.modelName || model.typeKey);
+    return this.copyTo(copy, options);
+  },
+  copyTo: function(copy, options) {
     options = options || {};
 
     var _this = this;
     return new Ember.RSVP.Promise(function(resolve) {
 
       var model = _this.constructor;
-      var copy = _this.get('store').createRecord(model.modelName || model.typeKey);
       var queue = [];
 
       model.eachAttribute(function(attr) {
