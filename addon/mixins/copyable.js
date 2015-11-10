@@ -31,7 +31,15 @@ export default Ember.Mixin.create({
       });
 
       model.eachRelationship(function(relName, meta) {
-        if (! config.relationships) { return; }
+        var relationships = config.relationships;
+        if (! relationships) { return; }
+        if (Ember.typeOf(relationships) === 'string') {
+          relationships = [relationships];
+        }
+        if (Ember.typeOf(relationships) === 'array' && relationships.indexOf(meta.kind) < 0) {
+          return;
+        }
+
         var rel = _this.get(relName);
         if (!rel) { return; }
 
