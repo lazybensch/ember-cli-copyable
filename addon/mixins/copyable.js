@@ -1,135 +1,79 @@
 import Ember from 'ember';
 import DS from 'ember-data';
+const { PromiseObject } = DS;
+const { String: { camelize }, get, set, Mixin, typeOf, RSVP } = Ember;
 
-export default Ember.Mixin.create({
-  copyable: true,
-  copy: function(options) {
-    options = options || {};
+function getCustom(key, custom) {
+  let value = this.get(key);
 
-    var _this = this;
-    return new Ember.RSVP.Promise(function(resolve) {
+  return new RSVP.Promise(resolve => {
+    if (typeOf(custom) === 'function') {
+      const customValue = custom.bind(this)(value, this);
+      if (customValue && customValue.then) {
+        return customValue.then(resolve);
+      } else {
+        return resolve(customValue);
+      }
+    } else {
+      return resolve(custom);
+    }
+  });
+}
 
-      var model = _this.constructor;
-      var copy = _this.get('store').createRecord(model.modelName || model.typeKey);
-      var queue = [];
+function getCopy(key, kind, option) {
+  let value = this.get(key);
 
-      model.eachAttribute(function(attr) {
-        switch(Ember.typeOf(options[attr])) {
-          case 'undefined':
-            copy.set(attr, _this.get(attr));
-            break;
-          case 'null':
-            copy.set(attr, null);
-            break;
-          default:
-            copy.set(attr, options[attr]);
-        }
-      });
+  if (!value || !value.then) {
+    value = RSVP.resolve(value);
+  }
 
-      model.eachRelationship(function(relName, meta) {
-        var rel = _this.get(relName);
-        if (!rel) { return; }
+  return new RSVP.Promise(resolve => {
+    value.then(value => {
+      if (!value) {
+        return resolve(value);
+      }
 
-        var overwrite;
-        var passedOptions = {};
-        switch(Ember.typeOf(options[relName])) {
-          case 'null':
-          return;
-          case 'instance':
-            overwrite = options[relName];
-            break;
-          case 'object':
-            passedOptions = options[relName];
-            break;
-          case 'array':
-            overwrite = options[relName];
-            break;
-          default:
-        }
+      if (kind === 'hasMany'){
+        return RSVP.all(value.map(item => item ? copyValue(item, option) : item)).then(resolve);
+      } else {
+        return resolve(copyValue(value, option));
+      }
+    });
+  });
+}
 
-        if (rel.constructor === DS.PromiseObject) {
+function copyValue(value, option) {
+  if (typeOf(value.copy) === 'function') {
+    return value.copy(option);
+  } else {
+    return get(value, 'copy') || value;
+  }
+}
 
-          queue.push(rel.then(function(obj) {
+export default Mixin.create({
+  copy(options = {}) {
 
-            if (obj && obj.get('copyable')) {
-              return obj.copy(passedOptions).then(function(objCopy) {
-                copy.set(relName, overwrite || objCopy);
-              });
+    const properties = {};
+    const addProperties = (_, { name, key = key || name, kind, options: { copy: custom } }) => { // jshint ignore:line
+      const option = options[key] || custom;
 
-            } else {
-              copy.set(relName, overwrite || obj);
-            }
+      if (option !== undefined && (kind ? typeOf(option) !== 'object' : true)) {
+        set(properties, key, getCustom.bind(this)(key, option));
+      } else {
+        set(properties, key, getCopy.bind(this)(key, kind, option));
+      }
+    };
 
-          }));
+    this.eachRelationship(addProperties);
+    this.eachAttribute(addProperties);
 
+    const store = this.get('store');
+    const classKey = camelize(this.get('constructor.modelName'));
 
-        } else if (rel.constructor === DS.PromiseManyArray) {
-
-          if (overwrite) {
-            copy.get(relName).pushObjects(overwrite);
-          } else {
-            queue.push(rel.then(function(array) {
-              var resolvedCopies =
-                array.map(function(obj) {
-                  if (obj.get('copyable')) {
-                    return obj.copy(passedOptions);
-                  } else {
-                    return obj;
-                  }
-                });
-              return Ember.RSVP.all(resolvedCopies).then(function(copies){
-                copy.get(relName).pushObjects(copies);
-              });
-            }));
-          }
-        } else {
-          if (meta.kind === 'belongsTo') {
-            var obj = rel;
-
-            if (obj && obj.get('copyable')) {
-              queue.push( obj.copy(passedOptions).then(function(objCopy) {
-                copy.set(relName, overwrite || objCopy);
-              }));
-
-            } else {
-              copy.set(relName, overwrite || obj);
-            }
-
-          } else {
-            var objs = rel;
-
-            if (objs.get('content')) {
-              objs = objs.get('content').compact();
-            }
-
-            if (objs.get('firstObject.copyable')) {
-
-              var copies = objs.map(function(obj) {
-                return obj.copy(passedOptions);
-              });
-
-              if (overwrite) {
-                copy.get(relName).pushObjects(overwrite);
-              } else {
-                queue.push( Ember.RSVP.all(copies).then( function(resolvedCopies) {
-                  copy.get(relName).pushObjects(resolvedCopies);
-                }));
-              }
-
-
-            } else {
-              copy.get(relName).pushObjects(overwrite || objs);
-            }
-          }
-
-        }
-      });
-
-
-      Ember.RSVP.all(queue).then(function() {
-        resolve(copy);
-      });
+    return PromiseObject.create({
+      promise: RSVP.hash(properties).then(properties => {
+        return store.createRecord(classKey, properties);
+      })
     });
   }
 });
-
