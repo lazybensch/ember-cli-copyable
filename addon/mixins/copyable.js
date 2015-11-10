@@ -3,8 +3,11 @@ import DS from 'ember-data';
 
 export default Ember.Mixin.create({
   copyable: true,
-  copy: function(options) {
+  copy: function(options, config) {
     options = options || {};
+    config = config || {};
+    config.attributes = config.attributes == null ? true : config.attributes;
+    config.relationships = config.relationships == null ? true : config.relationships;
 
     var _this = this;
     return new Ember.RSVP.Promise(function(resolve) {
@@ -14,6 +17,7 @@ export default Ember.Mixin.create({
       var queue = [];
 
       model.eachAttribute(function(attr) {
+        if (! config.attributes) { return; }
         switch(Ember.typeOf(options[attr])) {
           case 'undefined':
             copy.set(attr, _this.get(attr));
@@ -27,6 +31,15 @@ export default Ember.Mixin.create({
       });
 
       model.eachRelationship(function(relName, meta) {
+        var relationships = config.relationships;
+        if (! relationships) { return; }
+        if (Ember.typeOf(relationships) === 'string') {
+          relationships = [relationships];
+        }
+        if (Ember.typeOf(relationships) === 'array' && relationships.indexOf(meta.kind) < 0) {
+          return;
+        }
+
         var rel = _this.get(relName);
         if (!rel) { return; }
 
