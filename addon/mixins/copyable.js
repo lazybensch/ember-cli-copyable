@@ -66,7 +66,7 @@ export default Ember.Mixin.create({
         } else if (rel.constructor === DS.PromiseManyArray) {
 
           if (overwrite) {
-            copy.get(relName).pushObjects(overwrite);
+            copy.get(relName).setObjects(overwrite);
           } else {
             queue.push(rel.then(function(array) {
               var resolvedCopies =
@@ -78,7 +78,7 @@ export default Ember.Mixin.create({
                   }
                 });
               return Ember.RSVP.all(resolvedCopies).then(function(copies){
-                copy.get(relName).pushObjects(copies);
+                copy.get(relName).setObjects(copies);
               });
             }));
           }
@@ -109,16 +109,16 @@ export default Ember.Mixin.create({
               });
 
               if (overwrite) {
-                copy.get(relName).pushObjects(overwrite);
+                copy.get(relName).setObjects(overwrite);
               } else {
                 queue.push( Ember.RSVP.all(copies).then( function(resolvedCopies) {
-                  copy.get(relName).pushObjects(resolvedCopies);
+                  copy.get(relName).setObjects(resolvedCopies);
                 }));
               }
 
 
             } else {
-              copy.get(relName).pushObjects(overwrite || objs);
+              copy.get(relName).setObjects(overwrite || objs);
             }
           }
 
