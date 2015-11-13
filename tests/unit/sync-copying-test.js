@@ -27,6 +27,19 @@ test('it excludes attributes', function(assert) {
   });
 });
 
+test('copies to', function(assert) {
+  assert.expect(2);
+
+  var foo = store.getById('foo', '1');
+  return Ember.run(function() {
+    assert.equal(foo.get('property'), 'prop1');
+    var copy = store.createRecord('foo');
+    return foo.copyTo(copy).then(function () {
+      assert.equal(copy.get('property'), 'prop1');
+    });
+  });
+});
+
 test('it shallow copies relation', function(assert) {
   assert.expect(1);
 
