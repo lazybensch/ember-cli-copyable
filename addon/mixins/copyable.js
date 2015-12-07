@@ -18,6 +18,7 @@ export default Ember.Mixin.create({
       }
 
       var copy = _this.get('store').createRecord(model.modelName || model.typeKey);
+      copied[id] = copy;
       var queue = [];
 
       model.eachAttribute(function(attr) {
