@@ -16,7 +16,12 @@ export default Ember.Mixin.create({
       model.eachAttribute(function(attr) {
         switch(Ember.typeOf(options[attr])) {
           case 'undefined':
-            copy.set(attr, _this.get(attr));
+            var value = _this.get(attr);
+            if (Ember.typeOf(value) === 'array') {
+              copy.set(attr, value.slice());
+            } else {
+              copy.set(attr, value);
+            }
             break;
           case 'null':
             copy.set(attr, null);
@@ -132,4 +137,3 @@ export default Ember.Mixin.create({
     });
   }
 });
-
