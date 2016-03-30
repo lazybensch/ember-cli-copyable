@@ -157,7 +157,7 @@ $ npm install --save-dev ember-cli-copyable
 ```
 and then import the mixin wherever you need it:
 ```
-import Copyable from 'ember-cli-copyable;
+import Copyable from 'ember-cli-copyable';
 ```
 
 ## Contributing
