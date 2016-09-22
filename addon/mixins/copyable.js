@@ -11,13 +11,13 @@ export default Ember.Mixin.create({
     return new Ember.RSVP.Promise(function(resolve) {
 
       var model = _this.constructor;
-
-      var id = _this.get('id');
+      var modelName = model.modelName || model.typeKey;
+      var id = modelName + "--" + _this.get('id');
       if (copied.hasOwnProperty(id)) {
         return resolve(copied[id]);
       }
 
-      var copy = _this.get('store').createRecord(model.modelName || model.typeKey);
+      var copy = _this.get('store').createRecord(modelName);
       copied[id] = copy;
       var queue = [];
 
