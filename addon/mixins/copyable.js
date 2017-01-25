@@ -3,14 +3,22 @@ import DS from 'ember-data';
 
 export default Ember.Mixin.create({
   copyable: true,
-  copy: function(options) {
+  copy: function(options, copied) {
     options = options || {};
+    copied = copied || {};
 
     var _this = this;
     return new Ember.RSVP.Promise(function(resolve) {
 
       var model = _this.constructor;
-      var copy = _this.get('store').createRecord(model.modelName || model.typeKey);
+      var modelName = model.modelName || model.typeKey;
+      var id = modelName + "--" + _this.get('id');
+      if (copied.hasOwnProperty(id)) {
+        return resolve(copied[id]);
+      }
+
+      var copy = _this.get('store').createRecord(modelName);
+      copied[id] = copy;
       var queue = [];
 
       model.eachAttribute(function(attr) {
@@ -51,9 +59,9 @@ export default Ember.Mixin.create({
 
           queue.push(rel.then(function(obj) {
 
-            if (obj && obj.get('copyable')) {
-              return obj.copy(passedOptions).then(function(objCopy) {
-                copy.set(relName, overwrite || objCopy);
+            if (obj && obj.get('copyable') && !overwrite) {
+              return obj.copy(passedOptions, copied).then(function(objCopy) {
+                copy.set(relName, objCopy);
               });
 
             } else {
@@ -72,7 +80,7 @@ export default Ember.Mixin.create({
               var resolvedCopies =
                 array.map(function(obj) {
                   if (obj.get('copyable')) {
-                    return obj.copy(passedOptions);
+                    return obj.copy(passedOptions, copied);
                   } else {
                     return obj;
                   }
@@ -86,11 +94,10 @@ export default Ember.Mixin.create({
           if (meta.kind === 'belongsTo') {
             var obj = rel;
 
-            if (obj && obj.get('copyable')) {
-              queue.push( obj.copy(passedOptions).then(function(objCopy) {
-                copy.set(relName, overwrite || objCopy);
+            if (obj && obj.get('copyable') && !overwrite) {
+              queue.push( obj.copy(passedOptions, copied).then(function(objCopy) {
+                copy.set(relName, objCopy);
               }));
-
             } else {
               copy.set(relName, overwrite || obj);
             }
@@ -102,20 +109,15 @@ export default Ember.Mixin.create({
               objs = objs.get('content').compact();
             }
 
-            if (objs.get('firstObject.copyable')) {
+            if (objs.get('firstObject.copyable') && !overwrite) {
 
               var copies = objs.map(function(obj) {
-                return obj.copy(passedOptions);
+                return obj.copy(passedOptions, copied);
               });
 
-              if (overwrite) {
-                copy.get(relName).setObjects(overwrite);
-              } else {
-                queue.push( Ember.RSVP.all(copies).then( function(resolvedCopies) {
-                  copy.get(relName).setObjects(resolvedCopies);
-                }));
-              }
-
+              queue.push( Ember.RSVP.all(copies).then( function(resolvedCopies) {
+                copy.get(relName).setObjects(resolvedCopies);
+              }));
 
             } else {
               copy.get(relName).setObjects(overwrite || objs);
@@ -132,4 +134,3 @@ export default Ember.Mixin.create({
     });
   }
 });
-
