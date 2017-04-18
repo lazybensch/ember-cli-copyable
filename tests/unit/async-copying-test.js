@@ -1,3 +1,4 @@
+/* eslint-env embertest */
 import Ember from 'ember';
 import { test } from 'ember-qunit';
 import { module } from 'qunit';
@@ -9,6 +10,11 @@ var store;
 module('async copying', {
   beforeEach: function() {
     store = fabricate(startApp(), true);
+    // server.logging = true;
+
+  },
+  afterEach: function() {
+    server.shutdown();
   }
 });
 
@@ -29,8 +35,9 @@ test('it shallow copies relation', function(assert) {
   assert.expect(1);
 
   return Ember.run(function() {
-    return store.find('fooBar', '1').then( function(fooBar) {
-
+    return store.find('fooFix', '1').then(() => {
+      return store.find('fooBar', '1');
+    }).then( function(fooBar) {
       return fooBar.copy().then(function (copy) {
         assert.equal(copy.get('fooFix.id'), '1');
       });
@@ -72,7 +79,7 @@ test('it copies hasMany relation', function(assert) {
   assert.expect(5);
 
   return Ember.run(function() {
-    return store.find('baz', '1').then( function(baz) {
+    return store.find('baz', 1).then( function(baz) {
 
       return baz.copy().then(function (copy) {
         assert.equal(copy.get('foos.length'), 2);
@@ -137,7 +144,7 @@ test('it passes options to relations', function(assert) {
   assert.expect(2);
 
   return Ember.run(function() {
-    return store.find('multi', '1').then( function(multi) {
+    return store.find('multi', 1).then( function(multi) {
 
       return multi.copy({baz: {bar: {foo: {property: 'asdf'}}}}).then(function (copy) {
         assert.equal(copy.get('bars.firstObject.foo.property'), 'prop1');

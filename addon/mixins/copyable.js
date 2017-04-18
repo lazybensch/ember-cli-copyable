@@ -6,7 +6,7 @@ const {
   get,
   set,
   Mixin,
-  typeOf,
+  typeOf: emberTypeOf,
   RSVP: { Promise, allSettled }
 } = Ember;
 
@@ -24,14 +24,36 @@ let failSafeAll = (array) => {
 export default Mixin.create({
   copyable: true,
 
-  copy(options, copied) {
+  copy(options) {
     options = options || {};
-    copied = copied || {};
+    return this._copyAsync(options, {}).
+                then((copy) => {
+                  return this._applyOptions(options, copy);
+                });
+  },
 
+  _applyOptions(options, copy) {
+    if(!copy) {
+      return;
+    }
+
+    for(let optionName in options) {
+      let option = options[optionName];
+      if(emberTypeOf(option) === 'object') {
+        this._applyOptions(option, get(copy, optionName));
+      } else {
+        set(copy, optionName, option);
+      }
+    }
+
+    return copy;
+  },
+
+  _copyAsync(options, copied) {
     return new Promise(resolve => {
       let model = this.constructor;
       let modelName = model.modelName || model.typeKey;
-      let id = modelName + "--" + get(this, 'id');
+      let id = `${modelName}--${get(this, 'id')}`;
       if (copied.hasOwnProperty(id)) {
         return resolve(copied[id]);
       }
@@ -40,85 +62,77 @@ export default Mixin.create({
       copied[id] = copy;
       let queue = [];
 
-      model.eachAttribute(attr => {
-        switch(typeOf(options[attr])) {
+      model.eachAttribute((attr) => {
+        switch(emberTypeOf(options[attr])) {
           case 'undefined':
-            set(copy, attr, get(this, attr));
+            copy.set(attr, this.get(attr));
             break;
           case 'null':
-            set(copy, attr, null);
+            copy.set(attr, null);
             break;
           default:
-            set(copy, attr, options[attr]);
+            copy.set(attr, options[attr]);
         }
       });
 
       model.eachRelationship((relName, meta) => {
         let rel = get(this, relName);
-        if (!rel) { return; }
+        if (!rel) {
+          return;
+        }
 
-        let overwrite;
+        let relConstructor = get(rel, 'constructor');
+
         let passedOptions = {};
-        switch(typeOf(options[relName])) {
+
+        switch(emberTypeOf(options[relName])) {
           case 'null':
             return;
           case 'instance':
-            overwrite = options[relName];
+            set(copy, relName, options[relName])
             break;
           case 'object':
             passedOptions = options[relName];
             break;
           case 'array':
-            overwrite = options[relName];
+            get(copy, relName).setObjects(options[relName]);
             break;
           default:
         }
 
-        if (rel.constructor === PromiseObject) {
-
+        if (relConstructor === PromiseObject) {
           queue.push(rel.then(obj => {
-
-            if (obj && get(obj, 'copyable') && !overwrite) {
-              return obj.copy(passedOptions, copied).then(objCopy => {
+            if (obj && get(obj, 'copyable')) {
+              return obj._copyAsync(passedOptions, copied).then(objCopy => {
                 set(copy, relName, objCopy);
               });
-
             } else {
-              set(copy, relName, overwrite || obj);
+              set(copy, relName, obj);
             }
-
           }));
-
-
-        } else if (rel.constructor === PromiseManyArray) {
-
-          if (overwrite) {
-            get(copy, relName).setObjects(overwrite);
-          } else {
-            queue.push(rel.then(array => {
-              let resolvedCopies =
-                array.map(obj => {
-                  if (get(obj, 'copyable')) {
-                    return obj.copy(passedOptions, copied);
-                  } else {
-                    return obj;
-                  }
-                });
-              return failSafeAll(resolvedCopies).then(copies => {
-                get(copy, relName).setObjects(copies);
-              });
-            }));
-          }
+        } else if (relConstructor === PromiseManyArray) {
+          queue.push(rel.then(array => {
+            let resolvedCopies = array.map(obj => {
+              if (get(obj, 'copyable')) {
+                return obj._copyAsync(passedOptions, copied);
+              } else {
+                return obj;
+              }
+            });
+            return failSafeAll(resolvedCopies).then(copies => {
+              get(copy, relName).setObjects(copies);
+            });
+          }));
         } else {
           if (meta.kind === 'belongsTo') {
             let obj = rel;
 
-            if (obj && get(obj, 'copyable') && !overwrite) {
-              queue.push(obj.copy(passedOptions, copied).then(objCopy => {
+            if (obj && get(obj, 'copyable')) {
+              queue.push(obj._copyAsync(passedOptions, copied).then(objCopy => {
                 set(copy, relName, objCopy);
               }));
             } else {
-              set(copy, relName, overwrite || obj);
+              set(copy, relName, obj);
             }
 
           } else {
@@ -128,7 +142,7 @@ export default Mixin.create({
               objs = objs.get('content').compact();
             }
 
-            if (get(objs, 'firstObject.copyable') && !overwrite) {
+            if (get(objs, 'firstObject.copyable')) {
 
               let copies = objs.map(obj => {
                 return obj.copy(passedOptions, copied);
@@ -139,7 +153,7 @@ export default Mixin.create({
               }));
 
             } else {
-              get(copy, relName).setObjects(overwrite || objs);
+              get(copy, relName).setObjects(objs);
             }
           }
 
