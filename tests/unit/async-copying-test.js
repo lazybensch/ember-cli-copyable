@@ -33,9 +33,7 @@ test('it shallow copies relation', function(assert) {
   assert.expect(1);
 
   return Ember.run(function() {
-    return store.find('fooFix', 1).then(() => {
-      return store.find('fooBar', 1);
-    }).then( function(fooBar) {
+    return store.find('fooBar', 1).then(fooBar => {
       return fooBar.copy().then(function (copy) {
         assert.equal(copy.get('fooFix.id'), 1);
       });
@@ -51,6 +49,20 @@ test('it copies belongsTo relation', function(assert) {
 
       return bar.copy().then(function (copy) {
         assert.notEqual(copy.get('foo.id'), bar.get('foo.id'));
+        assert.equal(copy.get('foo.property'), 'prop1');
+      });
+    });
+  });
+});
+
+test('it shallow copies belongsTo relation', function(assert) {
+  assert.expect(2);
+
+  return Ember.run(function() {
+    return store.find('bar', 1).then( function(bar) {
+
+      return bar.shallowCopy().then(function (copy) {
+        assert.equal(copy.get('foo.id'), bar.get('foo.id'));
         assert.equal(copy.get('foo.property'), 'prop1');
       });
     });
