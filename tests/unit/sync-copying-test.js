@@ -7,14 +7,14 @@ import fabricate from '../helpers/fabricate';
 let store;
 
 module('sync copying', {
-  beforeEach: function() {
+  beforeEach() {
     store = fabricate(startApp(), false);
 
     return Ember.RSVP.all(['foo','bar','baz','multi','fooBar','fooFix', 'FooEmpty'].map(function(type) {
       return store.findAll(type);
     }));
   },
-  afterEach: function() {
+  afterEach() {
     server.shutdown();
   }
 });
