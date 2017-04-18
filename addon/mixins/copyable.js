@@ -1,48 +1,67 @@
 import Ember from 'ember';
 import DS from 'ember-data';
 
-export default Ember.Mixin.create({
+const {
+  A,
+  get,
+  set,
+  Mixin,
+  typeOf,
+  RSVP: { Promise, allSettled }
+} = Ember;
+
+const {
+  PromiseObject,
+  PromiseManyArray
+} = DS;
+
+let failSafeAll = (array) => {
+  return allSettled(array).then(response => {
+    return A(response || []).mapBy('value').filter(e => e);
+  });
+};
+
+export default Mixin.create({
   copyable: true,
-  copy: function(options, copied) {
+
+  copy(options, copied) {
     options = options || {};
     copied = copied || {};
 
-    var _this = this;
-    return new Ember.RSVP.Promise(function(resolve) {
-
-      var model = _this.constructor;
-      var modelName = model.modelName || model.typeKey;
-      var id = modelName + "--" + _this.get('id');
+    return new Promise(resolve => {
+      let model = this.constructor;
+      let modelName = model.modelName || model.typeKey;
+      let id = modelName + "--" + get(this, 'id');
       if (copied.hasOwnProperty(id)) {
         return resolve(copied[id]);
       }
 
-      var copy = _this.get('store').createRecord(modelName);
+      let copy = get(this, 'store').createRecord(modelName);
       copied[id] = copy;
-      var queue = [];
+      let queue = [];
 
-      model.eachAttribute(function(attr) {
-        switch(Ember.typeOf(options[attr])) {
+      model.eachAttribute(attr => {
+        switch(typeOf(options[attr])) {
           case 'undefined':
-            copy.set(attr, _this.get(attr));
+            set(copy, attr, get(this, attr));
             break;
           case 'null':
-            copy.set(attr, null);
+            set(copy, attr, null);
             break;
           default:
-            copy.set(attr, options[attr]);
+            set(copy, attr, options[attr]);
         }
       });
 
-      model.eachRelationship(function(relName, meta) {
-        var rel = _this.get(relName);
+      model.eachRelationship((relName, meta) => {
+        let rel = get(this, relName);
         if (!rel) { return; }
 
-        var overwrite;
-        var passedOptions = {};
-        switch(Ember.typeOf(options[relName])) {
+        let overwrite;
+        let passedOptions = {};
+        switch(typeOf(options[relName])) {
           case 'null':
-          return;
+            return;
           case 'instance':
             overwrite = options[relName];
             break;
@@ -55,72 +74,72 @@ export default Ember.Mixin.create({
           default:
         }
 
-        if (rel.constructor === DS.PromiseObject) {
+        if (rel.constructor === PromiseObject) {
 
-          queue.push(rel.then(function(obj) {
+          queue.push(rel.then(obj => {
 
-            if (obj && obj.get('copyable') && !overwrite) {
-              return obj.copy(passedOptions, copied).then(function(objCopy) {
-                copy.set(relName, objCopy);
+            if (obj && get(obj, 'copyable') && !overwrite) {
+              return obj.copy(passedOptions, copied).then(objCopy => {
+                set(copy, relName, objCopy);
               });
 
             } else {
-              copy.set(relName, overwrite || obj);
+              set(copy, relName, overwrite || obj);
             }
 
           }));
 
 
-        } else if (rel.constructor === DS.PromiseManyArray) {
+        } else if (rel.constructor === PromiseManyArray) {
 
           if (overwrite) {
-            copy.get(relName).setObjects(overwrite);
+            get(copy, relName).setObjects(overwrite);
           } else {
-            queue.push(rel.then(function(array) {
-              var resolvedCopies =
-                array.map(function(obj) {
-                  if (obj.get('copyable')) {
+            queue.push(rel.then(array => {
+              let resolvedCopies =
+                array.map(obj => {
+                  if (get(obj, 'copyable')) {
                     return obj.copy(passedOptions, copied);
                   } else {
                     return obj;
                   }
                 });
-              return Ember.RSVP.all(resolvedCopies).then(function(copies){
-                copy.get(relName).setObjects(copies);
+              return failSafeAll(resolvedCopies).then(copies => {
+                get(copy, relName).setObjects(copies);
               });
             }));
           }
         } else {
           if (meta.kind === 'belongsTo') {
-            var obj = rel;
+            let obj = rel;
 
-            if (obj && obj.get('copyable') && !overwrite) {
-              queue.push( obj.copy(passedOptions, copied).then(function(objCopy) {
-                copy.set(relName, objCopy);
+            if (obj && get(obj, 'copyable') && !overwrite) {
+              queue.push(obj.copy(passedOptions, copied).then(objCopy => {
+                set(copy, relName, objCopy);
               }));
             } else {
-              copy.set(relName, overwrite || obj);
+              set(copy, relName, overwrite || obj);
             }
 
           } else {
-            var objs = rel;
+            let objs = rel;
 
-            if (objs.get('content')) {
+            if (get(objs, 'content')) {
               objs = objs.get('content').compact();
             }
 
-            if (objs.get('firstObject.copyable') && !overwrite) {
+            if (get(objs, 'firstObject.copyable') && !overwrite) {
 
-              var copies = objs.map(function(obj) {
+              let copies = objs.map(obj => {
                 return obj.copy(passedOptions, copied);
               });
 
-              queue.push( Ember.RSVP.all(copies).then( function(resolvedCopies) {
-                copy.get(relName).setObjects(resolvedCopies);
+              queue.push(failSafeAll(copies).then(resolvedCopies => {
+                get(copy, relName).setObjects(resolvedCopies);
               }));
 
             } else {
-              copy.get(relName).setObjects(overwrite || objs);
+              get(copy, relName).setObjects(overwrite || objs);
             }
           }
 
@@ -128,7 +147,7 @@ export default Ember.Mixin.create({
       });
 
 
-      Ember.RSVP.all(queue).then(function() {
+      failSafeAll(queue).then(() => {
         resolve(copy);
       });
     });

@@ -137,5 +137,5 @@ export default function fabricate(app, async) {
   setupModels(app, async);
   setupFixtures(app);
   app.ApplicationAdapter = DS.FixtureAdapter;
-  return app.__container__.lookup('store:main');
+  return app.__container__.lookup('service:store');
 }

@@ -15,6 +15,7 @@ module('async copying', {
 test('it overwrites attributes', function(assert) {
   assert.expect(1);
 
+
   return Ember.run(function() {
     return store.find('foo', '1').then( function(foo) {
       return foo.copy({property: 'custom'}).then(function (copy) {
